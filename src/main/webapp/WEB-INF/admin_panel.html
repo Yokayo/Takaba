@@ -1,0 +1,89 @@
+<!--%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+%@ page contentType="text/html; charset=UTF-8" % -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ru" lang="ru">
+	<head>
+		<title>Мод-панель — Три.ч</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="/res/modpanel.css"/>
+        <script src="/jQuery.js"></script>
+        <script src="/res/admin_panel_callbacks.js"></script>
+	</head>
+    <body class="body_makaba">
+        <div class="transparent_bg"></div>
+        <div class="view_moders_form_container">
+            <div class="form_header">Список модераторов<div class="form_close_button view_moders_form_close_button">X</div></div>
+            <table class="moders_table" style="border: 1px solid black"><tr><th>Ник</th><th>Уровень</th><th>Доски</th><th>ID</th></tr></table>
+        </div>
+        <div class="form_container add_moder_form_container">
+            <div class="form_header">Добавить модератора<div class="form_close_button add_moder_form_close_button">X</div></div>
+                <form class="form_input add_moder_form">
+                    <div class="form_baseline">
+                        <input class="add_moder_lvl_field" name="level" placeholder="уровень доступа" style="flex-grow: 1; width: 100px"></input>
+                        <input name="boards" placeholder="список досок через запятую" style="margin-left: 2px; flex-grow: 1; width: 100px"></input>
+                        <input name="name" placeholder="ник" style="margin-left: 2px; flex-grow: 1; width: 100px"></input>
+                    </div>
+                </form>
+                <div class="centered_wrapper" style="margin: 2px"><button class="form_button add_moder_form_button">Отправить</button></div>
+        </div>
+        <div class="form_container edit_moder_form_container">
+            <div class="form_header">Редактировать модератора<div class="form_close_button edit_moder_form_close_button">X</div></div>
+                <form class="form_input edit_moder_form">
+                    <div class="form_baseline">
+                        <input name="key" placeholder="ID" style="flex-grow: 1;"></input>
+                    </div>
+                    <div class="form_baseline">
+                        <input class="edit_moder_lvl_field" name="level" placeholder="уровень доступа" style="flex-grow: 1; margin-right: 2px; width: 100px"></input>
+                        <input name="boards" placeholder="список досок через запятую" style="margin-left: 2px; flex-grow: 1; width: 100px"></input>
+                        <input name="name" placeholder="ник" style="margin-left: 2px; flex-grow: 1; width: 100px; margin-left: 2px"></input>
+                    </div>
+                </form>
+                <div class="centered_wrapper" style="margin: 2px"><button class="form_button edit_moder_form_button">Отправить</button></div>
+        </div><div class="form_container delete_moder_form_container">
+            <div class="form_header">Удалить модератора<div class="form_close_button delete_moder_form_close_button">X</div></div>
+                <form class="form_input delete_moder_form">
+                    <div class="form_baseline">
+                        <input name="moder" placeholder="ID" style="flex-grow: 1; width: 100px"></input>
+                    </div>
+                </form>
+                <div class="centered_wrapper" style="margin: 2px"><button class="form_button delete_moder_form_button">Отправить</button></div>
+        </div>
+        <div class="mod_panel_bar">
+            <div class="mod_panel_nav">
+                <div class="mod_panel_item"><span>Админ-панель</span></div>
+                <div class="mod_panel_item"><a href="/takaba/mod_panel?task=view_bans">Баны</a></div>
+                <div class="mod_panel_item"><a href="/takaba/mod_panel?task=view_reports">Жалобы</a></div>
+                <div class="mod_panel_item"><a href="/takaba/mod_panel?task=logout">Выход</a></div>
+            </div>
+        </div>
+        <div class="form_container add_board_form_container">
+            <div class="form_header">Добавить доску<div class="form_close_button add_board_form_close_button">X</div></div>
+                <form class="form_input add_board_form">
+                    <div class="form_baseline">
+                        <input name="id" placeholder="идентификатор" style="margin-left: 2px; flex-grow: 1; width: 100px"></input>
+                        <input name="name" placeholder="полное название" style="margin-left: 2px; flex-grow: 1; width: 100px"></input>
+                    </div>
+                    <div class="form_baseline">
+                        <input name="brief" placeholder="краткое описание" style="margin-left: 2px; flex-grow: 1; width: 100px"></input>
+                        <input name="default_name" placeholder="стандартное имя постера" style="margin-left: 2px; flex-grow: 1; width: 100px"></input>
+                    </div>
+                </form>
+                <div class="centered_wrapper" style="margin: 2px"><button class="form_button add_board_form_button">Отправить</button></div>
+        </div>
+        <div class="main_el_adm">
+            <div class="main_el_option">
+            <div class="centered_wrapper option_name_wrapper">[<a href="#" class="reglink add_mod_link">Модераторы</a>]</div>
+                <div class="options_list mods_action_list">
+                    <ul>
+                        <li><a class="action_link view_moders_link">Список модераторов</a></li><br/>
+                        <li><a class="action_link add_moder_link">Добавить модератора</a></li><br/>
+                        <li><a class="action_link edit_moder_link">Редактировать модератора</a></li><br/>
+                        <li><a class="action_link remove_moder_link">Удалить модератора</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="main_el_option">
+            <div class="centered_wrapper option_name_wrapper"><a href="/takaba/board_management" class="reglink board_menu_link">Управление досками</a></div>
+        </div>
+    </body>
+</html>
