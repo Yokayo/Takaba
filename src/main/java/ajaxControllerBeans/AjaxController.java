@@ -58,8 +58,8 @@ public class AjaxController{ // основной функциональный к
             Board board = boardsCache.getBoard(board_id);
             if(board == null)
                 return buildResponse("1", "Доски не существует");
-            ArrayList<Ban> bans = boards_cache.bansList.get(board_id);
-            if(boards_cache.bansList.get("global_bans") != null) // проверяем не забанен ли клиент
+            ArrayList<Ban> bans = boardsСache.bansList.get(board_id);
+            if(boardsСache.bansList.get("global_bans") != null) // проверяем не забанен ли клиент
                 bans.addAll(boards_cache.bansList.get("global_bans"));
             if(bans != null){
                 for(int a = 0; a < bans.size(); a++){
@@ -93,7 +93,7 @@ public class AjaxController{ // основной функциональный к
                     int finalIndex = 0;
                     while(finalIndex < parts[a].length() && "1234567890".indexOf(parts[a].charAt(finalIndex)) != -1)
                         finalIndex ++;
-                    String linkToReplace = parts[a].substring(0, final_index);
+                    String linkToReplace = parts[a].substring(0, finalIndex);
                     repliesTo.add(linkToReplace);
                     board.getPost(linkToReplace).addReply(String.valueOf(board.getTotalPosts()+1L));
                     parts[a] = parts[a].replaceFirst(linkToReplace, "<a class=\"post-reply-link\" data-num=\"" + linkToReplace + "\" parent-post-num=\"" + String.valueOf(board.getTotalPosts()+1L) + "\">>>" + link_to_replace + "</a>");
@@ -136,10 +136,10 @@ public class AjaxController{ // основной функциональный к
                     }
                     String[] spl = file.getOriginalFilename().split("\\.");
                     String extension = spl[spl.length-1];
-                    File folder = new File(root_path + "res/" + board_id + "/src/");
+                    File folder = new File(rootPath + "res/" + boardId + "/src/");
                     folder.mkdirs();
-                    String fullPath = root_path + "res/" + board_id + "/src/" + filename + "." + extension;
-                    String thumbPath = root_path + "res/" + board_id + "/thumb/" + filename + "." + extension;
+                    String fullPath = rootPath + "res/" + boardId + "/src/" + filename + "." + extension;
+                    String thumbPath = rootPath + "res/" + boardId + "/thumb/" + filename + "." + extension;
                     InputStream is = file.getInputStream();
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     int res = is.read();
