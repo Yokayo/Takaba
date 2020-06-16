@@ -44,23 +44,23 @@ import rootContextBeans.*;
 @Controller(value = "ajax_controller")
 public class AjaxController{ // основной функциональный контроллер, отвечает на ajax запросы и ответственнен за модерку
                              // почему ещё и за модерку? Потому что адрес подходящий. Хотя можно и поменять
-    private String root_path = System.getProperty("catalina.base").replace("\\", "/") + "/webapps/ROOT/";
-    @Inject private BoardsCache boards_cache;
+    private String rootPath = System.getProperty("catalina.base").replace("\\", "/") + "/webapps/ROOT/";
+    @Inject private BoardsCache boardsCache;
     
     @RequestMapping(value = "posting", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     @ResponseBody
     public String posting(StandardMultipartHttpServletRequest request){ // постинг
         try{
-            String board_id = utfEncode(request.getParameter("board"));
+            String boardId = utfEncode(request.getParameter("board"));
             String text = utfEncode((String) request.getParameter("contents"));
             ArrayList<String> repliesTo = new ArrayList<>();
             String[] parts = text.split(">>");
-            Board board = boards_cache.getBoard(board_id);
+            Board board = boardsCache.getBoard(board_id);
             if(board == null)
                 return buildResponse("1", "Доски не существует");
-            ArrayList<Ban> bans = boards_cache.bans_list.get(board_id);
-            if(boards_cache.bans_list.get("global_bans") != null) // проверяем не забанен ли клиент
-                bans.addAll(boards_cache.bans_list.get("global_bans"));
+            ArrayList<Ban> bans = boards_cache.bansList.get(board_id);
+            if(boards_cache.bansList.get("global_bans") != null) // проверяем не забанен ли клиент
+                bans.addAll(boards_cache.bansList.get("global_bans"));
             if(bans != null){
                 for(int a = 0; a < bans.size(); a++){
                     if(bans.get(a).getIP().equals(request.getRemoteAddr())){
@@ -78,7 +78,7 @@ public class AjaxController{ // основной функциональный к
                 for(MultipartFile file: pics){
                     if(file.isEmpty())
                         continue;
-                    if((int)Math.floor(file.getSize() / 1024 / 1024) > board.max_file_size)
+                    if((int)Math.floor(file.getSize() / 1024 / 1024) > board.maxFileSize)
                         return buildResponse("1", "Файл слишком большой");
                     String[] spl = file.getOriginalFilename().split("\\.");
                     extension = spl[spl.length-1];
@@ -90,13 +90,13 @@ public class AjaxController{ // основной функциональный к
             if(parts.length > 1){ // создание ссылок на цитируемые посты
                 text = parts[0];
                 for(int a = 1; a < parts.length; a++){
-                    int final_index = 0;
-                    while(final_index < parts[a].length() && "1234567890".indexOf(parts[a].charAt(final_index)) != -1)
-                        final_index ++;
-                    String link_to_replace = parts[a].substring(0, final_index);
-                    repliesTo.add(link_to_replace);
-                    board.getPost(link_to_replace).addReply(String.valueOf(board.getTotalPosts()+1L));
-                    parts[a] = parts[a].replaceFirst(link_to_replace, "<a class=\"post-reply-link\" data-num=\"" + link_to_replace + "\" parent-post-num=\"" + String.valueOf(board.getTotalPosts()+1L) + "\">>>" + link_to_replace + "</a>");
+                    int finalIndex = 0;
+                    while(finalIndex < parts[a].length() && "1234567890".indexOf(parts[a].charAt(finalIndex)) != -1)
+                        finalIndex ++;
+                    String linkToReplace = parts[a].substring(0, final_index);
+                    repliesTo.add(linkToReplace);
+                    board.getPost(linkToReplace).addReply(String.valueOf(board.getTotalPosts()+1L));
+                    parts[a] = parts[a].replaceFirst(linkToReplace, "<a class=\"post-reply-link\" data-num=\"" + linkToReplace + "\" parent-post-num=\"" + String.valueOf(board.getTotalPosts()+1L) + "\">>>" + link_to_replace + "</a>");
                     text = text.concat(parts[a]);
                 }
             }
@@ -105,9 +105,9 @@ public class AjaxController{ // основной функциональный к
             String name = utfEncode(request.getParameter("name"));
             String tripcode = "";
             if(name.contains("#")){ // генерация трипкода
-                String[] name_parts = name.split("#", 2);
-                tripcode = name_parts[1];
-                name = name_parts[0];
+                String[] nameParts = name.split("#", 2);
+                tripcode = nameParts[1];
+                name = nameParts[0];
                 tripcode = generateTrip(tripcode);
             }
             String subject = utfEncode((String) request.getParameter("subject"));
@@ -121,12 +121,12 @@ public class AjaxController{ // основной функциональный к
                     int width = img.getWidth();
                     int height = img.getHeight();
                     if(img.getWidth() > 250 || img.getHeight() > 250){
-                        boolean width_greater = img.getWidth() > img.getHeight();
+                        boolean widthGreater = img.getWidth() > img.getHeight();
                         double ratio = (double)(img.getWidth()) / img.getHeight();
-                        double reverse_ratio = (double)(img.getHeight()) / img.getWidth();
+                        double reverseRatio = (double)(img.getHeight()) / img.getWidth();
                         BufferedImage thumb = new BufferedImage(
-                        width_greater ? 250 : (int)(250*ratio),
-                        width_greater ? (int)(250*reverse_ratio) : 250,
+                        widthGreater ? 250 : (int)(250*ratio),
+                        widthGreater ? (int)(250*reverseRatio) : 250,
                         BufferedImage.SCALE_DEFAULT);
                         Image tmp = img.getScaledInstance(thumb.getWidth(), thumb.getHeight(), Image.SCALE_SMOOTH);
                         Graphics2D g2d = thumb.createGraphics();
@@ -138,8 +138,8 @@ public class AjaxController{ // основной функциональный к
                     String extension = spl[spl.length-1];
                     File folder = new File(root_path + "res/" + board_id + "/src/");
                     folder.mkdirs();
-                    String full_path = root_path + "res/" + board_id + "/src/" + filename + "." + extension;
-                    String thumb_path = root_path + "res/" + board_id + "/thumb/" + filename + "." + extension;
+                    String fullPath = root_path + "res/" + board_id + "/src/" + filename + "." + extension;
+                    String thumbPath = root_path + "res/" + board_id + "/thumb/" + filename + "." + extension;
                     InputStream is = file.getInputStream();
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
                     int res = is.read();
@@ -149,9 +149,9 @@ public class AjaxController{ // основной функциональный к
                     }
                     os.flush();
                     if(!board.delayedFlushingEnabled){ // сохраняем в кэш либо сразу на диск
-                        File full_size = new File(full_path);
-                        File thumb = new File(thumb_path);
-                        FileOutputStream stream = new FileOutputStream(full_size);
+                        File fullSize = new File(fullPath);
+                        File thumb = new File(thumbPath);
+                        FileOutputStream stream = new FileOutputStream(fullSize);
                         stream.write(os.toByteArray());
                         stream.close();
                         stream = new FileOutputStream(thumb);
@@ -159,12 +159,12 @@ public class AjaxController{ // основной функциональный к
                         stream.close();
                     }else{
                         CachedImage full = new CachedImage(filename, extension, os.toByteArray());
-                        boards_cache.images_cache.put(full_path, full);
+                        boardsCache.images_cache.put(fullPath, full);
                         os = new ByteArrayOutputStream();
                         ImageIO.write(img, extension, os);
                         os.flush();
-                        boards_cache.images_cache.put(thumb_path, new CachedImage(filename, extension, os.toByteArray()));
-                        boards_cache.needsImagesFlushing = true;
+                        boardsCache.images_cache.put(thumb_path, new CachedImage(filename, extension, os.toByteArray()));
+                        boardsCache.needsImagesFlushing = true;
                     }
                     files.add(Json.createObjectBuilder()
                     .add("name", filename + "." + extension)
@@ -172,8 +172,8 @@ public class AjaxController{ // основной функциональный к
                     .add("height", String.valueOf(height))
                     .add("thumb_width", String.valueOf(img.getWidth()))
                     .add("thumb_height", String.valueOf(img.getHeight()))
-                    .add("full_path", "/res/" + board_id + "/src/" + filename + "." + extension)
-                    .add("thumb_path", "/res/" + board_id + "/thumb/" + filename + "." + extension)
+                    .add("full_path", "/res/" + boardId + "/src/" + filename + "." + extension)
+                    .add("thumb_path", "/res/" + boardId + "/thumb/" + filename + "." + extension)
                     .add("size", String.valueOf((int) Math.ceil(os.toByteArray().length / 1024L)))
                     .build());
                 }
@@ -181,7 +181,7 @@ public class AjaxController{ // основной функциональный к
             JsonWriter writer;
             JsonReader reader;
             JsonArrayBuilder builder;
-            String board_folder_path = root_path + "res//" + board_id;
+            String boardFolderPath = rootPath + "res//" + boardId;
             if(thread.equals("-1")) // новый тред
                 thread = Long.toString(board.getTotalPosts()+1L);
             if(name.equals("")){
@@ -266,29 +266,29 @@ public class AjaxController{ // основной функциональный к
             + (date_.getMinutes() < 10 ? "0" + date_.getMinutes() : date_.getMinutes())
             + ":"
             + (date_.getSeconds() < 10 ? "0" + date_.getSeconds() : date_.getSeconds());
-            File catalog_file = new File(board_folder_path + "/catalog.json");
-            trich.Thread cached_thread = board.getThread(thread);
-            if(cached_thread != null){ // обновление in-memory storage
-                cached_thread.addPost
-                (Long.toString(board.getTotalPosts()+1L), thread, cached_thread.getPostcount()+1, name, tripcode, date, subject, text, files, false, request.getRemoteAddr(), repliesTo, new ArrayList<>());
-                board.bumpThread(cached_thread);
+            File catalogFile = new File(boardFolderPath + "/catalog.json");
+            trich.Thread cachedThread = board.getThread(thread);
+            if(cachedThread != null){ // обновление in-memory storage
+                cachedThread.addPost
+                (Long.toString(board.getTotalPosts()+1L), thread, cachedThread.getPostcount()+1, name, tripcode, date, subject, text, files, false, request.getRemoteAddr(), repliesTo, new ArrayList<>());
+                board.bumpThread(cachedThread);
                 board.setTotalPosts(board.getTotalPosts()+1L);
             }else{
-                cached_thread = new trich.Thread(new Post(
+                cachedThread = new trich.Thread(new Post(
                 Long.toString(board.getTotalPosts()+1L),
                 thread, 1, name, tripcode, date, subject,
                 text,
                 files,
                 true,
-                request.getRemoteAddr(), repliesTo, new ArrayList<>()), board_id);
-                board.addThread(cached_thread, true);
+                request.getRemoteAddr(), repliesTo, new ArrayList<>()), boardId);
+                board.addThread(cachedThread, true);
                 board.setTotalPosts(board.getTotalPosts()+1L);
             }
             if(board.delayedFlushingEnabled){
                 board.needsCatalogFlushing = true;
                 cached_thread.needsFlushing = true;
             }else{
-                boards_cache.flushThread(cached_thread);
+                boards_cache.flushThread(cachedThread);
             }
             return buildResponse("0", "Сообщение отправлено");
         }catch(Exception e){
@@ -321,53 +321,53 @@ public class AjaxController{ // основной функциональный к
         if(board == null){
             return buildResponse("1", "Доски не существует");
         }
-        StringWriter string_writer = new StringWriter();
-        JsonWriter json_writer = Json.createWriter(string_writer);
+        StringWriter stringWriter = new StringWriter();
+        JsonWriter jsonWriter = Json.createWriter(stringWriter);
         JsonObjectBuilder builder = Json.createObjectBuilder();
         builder.add("BoardTitle", board.getTitle());
         builder.add("BoardInfo", board.getDesc());
         builder.add("DefaultName", board.getDefaultName());
         builder.add("MaxFileSize", board.max_file_size);
         builder.add("DelayedFlushing", String.valueOf(board.delayedFlushingEnabled));
-        json_writer.write(builder.build());
-        return string_writer.toString();
+        jsonWriter.write(builder.build());
+        return stringWriter.toString();
     }
     
     @RequestMapping(value = "config", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     @ResponseBody
     public String changeConfig(HttpServletRequest request){ // отредактировать настройки доски
-        String mod_id = boards_cache.checkModerator(request);
-        if(mod_id == null)
+        String modId = boards_cache.checkModerator(request);
+        if(modId == null)
             return buildResponse("1", "Нет доступа");
-        if(boards_cache.active_moder_sessions.get(mod_id).getAccessLevel() < 4)
+        if(boardsCache.activeModerSessions.get(mod_id).getAccessLevel() < 4)
             return buildResponse("1", "Нет доступа");
         String title = utfEncode(request.getParameter("title"));
-        String edited_board = request.getParameter("edited");
+        String editedBoard = request.getParameter("edited");
         String id = request.getParameter("id");
         String brief = utfEncode(request.getParameter("brief"));
         String name = utfEncode(request.getParameter("default_name"));
         String mfs = request.getParameter("mfs");
-        if(title == null || edited_board == null || id == null || brief == null || name == null || mfs == null){
+        if(title == null || editedBoard == null || id == null || brief == null || name == null || mfs == null){
             return buildResponse("1", "Отсутствуют необходимые параметры");
         }
-        if(edited_board.equals("+")){
+        if(editedBoard.equals("+")){
             int mfs_;
             try{
                 mfs_ = Integer.parseInt(mfs);
             }catch(Exception e){
                 return buildResponse("1", "Неверный формат");
             }
-            Board board = new Board(id, title, brief, name, mfs, boards_cache);
+            Board board = new Board(id, title, brief, name, mfs, boardsCache);
             board.delayedFlushingEnabled = request.getParameter("delayed_flushing") != null;
-            boards_cache.getBoards().add(board);
-            boards_cache.boards_list.put(id, board);
-            board.addBanReasonsSet(boards_cache.general_ban_reasons);
-            File board_folder = new File(root_path + "res/" + id);
-            board_folder.mkdirs();
+            boardsCache.getBoards().add(board);
+            boardsCache.boards_list.put(id, board);
+            board.addBanReasonsSet(boardsCache.generalBanReasons);
+            File boardFolder = new File(rootPath + "res/" + id);
+            boardFolder.mkdirs();
             board.needsSettingsFlushing = true;
             return buildResponse("0", "Доска создана");
         }
-        Board board = boards_cache.getBoard(edited_board);
+        Board board = boardsCache.getBoard(editedBoard);
         if(board == null){
             return buildResponse("1", "Доски не существует");
         }
@@ -378,13 +378,13 @@ public class AjaxController{ // основной функциональный к
             return buildResponse("1", "Неверный формат");
         }
         if(!id.equals(board.id)){
-            boards_cache.boards_list.remove(board.id);
-            boards_cache.boards_list.put(id, board);
+            boardsCache.boardsList.remove(board.id);
+            boardscache.boardsList.put(id, board);
         }
         board.id = id;
         board.title = title;
-        board.default_name = name;
-        board.max_file_size = mfs_;
+        board.defaultName = name;
+        board.maxFileSize = mfs_;
         board.desc = brief;
         board.delayedFlushingEnabled = request.getParameter("delayed_flushing") != null;
         board.needsSettingsFlushing = true;
@@ -400,34 +400,34 @@ public class AjaxController{ // основной функциональный к
         String board = utfEncode((String) request.getParameter("board"));
         String[] posts = request.getParameterValues("posts");
         String ip = request.getRemoteAddr();
-        if(text == null || thread == null || board == null || posts == null || boards_cache.getBoard(board) == null){
+        if(text == null || thread == null || board == null || posts == null || boardsCache.getBoard(board) == null){
             return buildResponse("1", "Не указаны необходимые параметры");
         }
-        if(boards_cache.getBoard(board) == null)
+        if(boardsCache.getBoard(board) == null)
             return buildResponse("1", "Доски не существует");
-        ArrayList<String> posts_list = new ArrayList<>();
+        ArrayList<String> postsList = new ArrayList<>();
         for(int a = 0; a < posts.length; a++)
-            posts_list.add(posts[a]);
-        boards_cache.getBoard(board).addReport(new Report(board, posts_list, text, ip, String.valueOf(boards_cache.getReportsCounter()+1)));
-        boards_cache.setReportsCounter(boards_cache.getReportsCounter()+1);
-        File reports_file = new File(root_path + "//res//" + board + "//reports.json");
+            postsList.add(posts[a]);
+        boardsCache.getBoard(board).addReport(new Report(board, postsList, text, ip, String.valueOf(boards_cache.getReportsCounter()+1)));
+        boardsCache.setReportsCounter(boardsCache.getReportsCounter()+1);
+        File reportsFile = new File(rootPath + "//res//" + board + "//reports.json");
         JsonArrayBuilder builder = Json.createArrayBuilder();
-        if(reports_file.length() != 0){
-            JsonReader reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(root_path + "//res//" + board + "//reports.json"), "UTF-8")));
+        if(reportsFile.length() != 0){
+            JsonReader reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(rootPath + "//res//" + board + "//reports.json"), "UTF-8")));
             ArrayList<JsonObject> reports = new ArrayList<>(reader.readArray().getValuesAs(JsonObject.class));
             reader.close();
             for(int a = 0; a < reports.size(); a++)
                 builder.add(reports.get(a));
         }
-        JsonArrayBuilder posts_builder = Json.createArrayBuilder();
+        JsonArrayBuilder postsBuilder = Json.createArrayBuilder();
         for(int a = 0; a < posts.length; a++)
-            posts_builder.add(posts[a]);
+            postsBuilder.add(posts[a]);
         builder.add(Json.createObjectBuilder()
         .add("board", board)
-        .add("posts", posts_builder.build())
+        .add("posts", postsBuilder.build())
         .add("text", text)
         .add("ip", ip)
-        .add("id", String.valueOf(boards_cache.getReportsCounter()))
+        .add("id", String.valueOf(boardsCache.getReportsCounter()))
         .build());
         JsonWriter writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(root_path + "//res//" + board + "//reports.json"), "UTF-8")));
         writer.writeArray(builder.build());
@@ -443,7 +443,7 @@ public class AjaxController{ // основной функциональный к
     @ResponseBody
     public String deleteReports(HttpServletRequest request){ // удалить жалобы
         try{
-        if(boards_cache.checkModerator(request) == null)
+        if(boardsCache.checkModerator(request) == null)
             return buildResponse("1", "Нет доступа");
         String[] raw = request.getParameterValues("id");
         if(raw == null)
@@ -455,19 +455,19 @@ public class AjaxController{ // основной функциональный к
             boards[a] = raw[a].split("_")[0];
         }
         for(int a = 0; a < raw.length; a++){
-            Board board = boards_cache.getBoard(boards[a]);
+            Board board = boardsCache.getBoard(boards[a]);
             if(board == null)
                 continue;
-            boards_cache.removeReport(board.getReportByID(ids[a]));
+            boardsCache.removeReport(board.getReportByID(ids[a]));
             JsonArrayBuilder builder = Json.createArrayBuilder();
-            JsonReader reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(root_path + "//res//" + boards[a] + "//reports.json"), "UTF-8")));
+            JsonReader reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(rootPath + "//res//" + boards[a] + "//reports.json"), "UTF-8")));
             ArrayList<JsonObject> reports = new ArrayList<>(reader.readArray().getValuesAs(JsonObject.class));
             reader.close();
             for(int b = 0; b < reports.size(); b++){
                 if(!reports.get(b).getJsonString("id").getString().equals(ids[a]))
                     builder.add(reports.get(b));
             }
-            JsonWriter writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(root_path + "//res//" + boards[a] + "//reports.json"), "UTF-8")));
+            JsonWriter writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(rootPath + "//res//" + boards[a] + "//reports.json"), "UTF-8")));
             writer.writeArray(builder.build());
             writer.close();
         }
@@ -481,33 +481,35 @@ public class AjaxController{ // основной функциональный к
     @RequestMapping(value = "delete_posts", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     @ResponseBody
     public String deletePosts(HttpServletRequest request){ // удалить посты
-        String mod_id = boards_cache.checkModerator(request);
-        if(mod_id == null)
+        String modId = boardsCache.checkModerator(request);
+        if(modId == null)
             return buildResponse("1", "Нет доступа");
-        String[] posts_to_delete = request.getParameterValues("post");
-        if(posts_to_delete == null){
+        String[] postsToDelete = request.getParameterValues("post");
+        if(postsToDelete == null){
             return buildResponse("1", "Нет постов для удаления");
         }
-        String board_id = request.getParameter("board");
+        String boardId = request.getParameter("board");
         boolean applicable = false;
-        String[] boards = boards_cache.active_moder_sessions.get(mod_id).getBoards();
+        String[] boards = boards_cache.activeModerSessions.get(modId).getBoards();
         for(int a = 0; a < boards.length; a++){
-            if(boards[a].equals(board_id)){
+            if(boards[a].equals(boardId)){
                 applicable = true;
                 break;
             }
         }
         if(!applicable)
             return buildResponse("1", "Нет доступа");
-        Board board = boards_cache.getBoard(board_id);
+        Board board = boardsCache.getBoard(boardId);
         Post post;
-        for(int a = 0; a < posts_to_delete.length; a++){
-            post = board.getPost(posts_to_delete[a]);
+        for(int a = 0; a < postsToDelete.length; a++){
+            post = board.getPost(postsToDelete[a]);
             if(post == null)
                 continue;
             for(int b = 0; b < post.getRepliedPosts().size(); b++){
-                try{Post replied_post = board.getPost(post.getRepliedPosts().get(b));
-                replied_post.removeReply(post.getPostnum());}catch(Exception e){continue;}
+                try{
+                    Post repliedPost = board.getPost(post.getRepliedPosts().get(b));
+                    repliedPost.removeReply(post.getPostnum());
+                }catch(Exception e){continue;}
             }
             board.getThread(post.getThread()).removePost(post);
         }
@@ -551,11 +553,11 @@ public class AjaxController{ // основной функциональный к
     @ResponseBody
     public String randomThreadJSON(HttpServletRequest request){ // получить json треда по номеру поста
         String postnum = request.getParameter("num");           // нужно для подгрузки ответов
-        String board_id = request.getParameter("board");
-        if(postnum == null || board_id == null){
+        String boardId = request.getParameter("board");
+        if(postnum == null || boardId == null){
             return buildResponse("1", "Недостаточно параметров");
         }
-        Board board = boards_cache.getBoard(board_id);
+        Board board = boardsCache.getBoard(board_id);
         if(board == null){
             return buildResponse("1", "Доски не существует");
         }
@@ -570,10 +572,10 @@ public class AjaxController{ // основной функциональный к
     @ResponseBody
     public String editModer(HttpServletRequest request){ // изменить данные модератора
         try{
-        String mod_id = boards_cache.checkModerator(request);
-        if(mod_id == null)
+        String modId = boards_cache.checkModerator(request);
+        if(modId == null)
             return buildResponse("1", "Нет доступа");
-        if(boards_cache.active_moder_sessions.get(mod_id).getAccessLevel() < 4)
+        if(boardsCache.activeModerSessions.get(modId).getAccessLevel() < 4)
             return buildResponse("1", "Нет доступа");
         String key = request.getParameter("key");
         String al = request.getParameter("level");
@@ -582,7 +584,7 @@ public class AjaxController{ // основной функциональный к
         if(key == null){
             return buildResponse("1", "Не указан ID");
         }
-        if(boards_cache.getModByID(key) == null)
+        if(boardsCache.getModByID(key) == null)
             return buildResponse("1", "Модератор не найден");
         String[] boards;
         if(al == null)
@@ -597,7 +599,7 @@ public class AjaxController{ // основной функциональный к
             boards[a] = boards[a].replaceAll(" ", "");
         }
         ensureModeratorPersistence(new Mod(key, al, boards, name));
-        Mod mod = boards_cache.getModByID(key);
+        Mod mod = boardsCache.getModByID(key);
         mod.setAccessLevel(Integer.parseInt(al));
         mod.setName(name);
         mod.setBoards(boards);
@@ -612,22 +614,22 @@ public class AjaxController{ // основной функциональный к
     @ResponseBody
     public String deleteModer(HttpServletRequest request){ // удалить модератора
         try{
-        String mod_id = boards_cache.checkModerator(request);
-        if(mod_id == null)
+        String modId = boards_cache.checkModerator(request);
+        if(modId == null)
             return buildResponse("1", "Нет доступа");
-        if(boards_cache.active_moder_sessions.get(mod_id).getAccessLevel() < 4)
+        if(boardsCache.activeModerSessions.get(modId).getAccessLevel() < 4)
             return buildResponse("1", "Нет доступа");
-        String[] moders_to_remove = request.getParameterValues("moder");
-        File mods_file = new File(root_path + "WEB-INF/mods.json");
-        JsonReader reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(mods_file), "UTF-8")));
+        String[] modersToRemove = request.getParameterValues("moder");
+        File modsFile = new File(rootPath + "WEB-INF/mods.json");
+        JsonReader reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(modsFile), "UTF-8")));
         ArrayList<JsonObject> mods = new ArrayList<>(reader.readArray().getValuesAs(JsonObject.class));
         reader.close();
         JsonArrayBuilder builder = Json.createArrayBuilder();
         building_new_array:
         for(int a = 0; a < mods.size(); a++){
             JsonObject mod = mods.get(a);
-            for(int b = 0; b < moders_to_remove.length; b++){
-                if(mod.getString("key").equals(moders_to_remove[b]))
+            for(int b = 0; b < modersToRemove.length; b++){
+                if(mod.getString("key").equals(modersToRemove[b]))
                     continue building_new_array;
             }
             builder.add(mod);
@@ -644,22 +646,22 @@ public class AjaxController{ // основной функциональный к
     
     @RequestMapping(value = "board_management", method = RequestMethod.GET) // страница управления досками
     public View boardManagement(HttpServletRequest request, HashMap<String, Object> model){
-        String mod_id = boards_cache.checkModerator(request);
-        if(mod_id == null)
+        String modId = boardsCache.checkModerator(request);
+        if(modId == null)
             return new JstlView("/thread_404.html");
-        if(boards_cache.active_moder_sessions.get(mod_id).getAccessLevel() < 4)
+        if(boardsCache.activeModerSessions.get(modId).getAccessLevel() < 4)
             return new JstlView("/thread_404.html");
-        model.put("boards", boards_cache.getBoards());
+        model.put("boards", boardsCache.getBoards());
         return new JstlView("/WEB-INF/boards_management.jsp");
     }
     
     @RequestMapping(value = "mods_json", method = RequestMethod.GET, produces = "application/json;charset=UTF-8")
     @ResponseBody
     public String getMods(HttpServletRequest request){ // получить данные о модераторах в json
-        String mod_id = boards_cache.checkModerator(request);
-        if(mod_id == null)
+        String modId = boardsCache.checkModerator(request);
+        if(modId == null)
             return buildResponse("1", "Нет доступа");
-        if(boards_cache.active_moder_sessions.get(mod_id).getAccessLevel() < 4)
+        if(boardsCache.activeModerSessions.get(modId).getAccessLevel() < 4)
             return buildResponse("1", "Нет доступа");
         JsonArrayBuilder builder = Json.createArrayBuilder();
         ArrayList<Mod> mods = new ArrayList<>(boards_cache.mods_list.values());
@@ -691,21 +693,20 @@ public class AjaxController{ // основной функциональный к
         if(key == null){
             return new RedirectView("/takaba/mod_panel?task=login");
         }
-        if(boards_cache.getModByID(key) == null)
+        if(boardsCache.getModByID(key) == null)
             return new RedirectView("/takaba/mod_panel?task=login"); // TODO wrong ID
-        String session_id = UUID.randomUUID().toString();
-        while(boards_cache.active_moder_sessions.containsKey(session_id)){
-            session_id = "";
-            session_id = UUID.randomUUID().toString();
+        String sessionId = UUID.randomUUID().toString();
+        while(boardsCache.active_moder_sessions.containsKey(sessionId)){
+            sessionId = "";
+            sessionId = UUID.randomUUID().toString();
         }
-        Cookie cookie = new Cookie("mod_session_id", session_id.toString());
+        Cookie cookie = new Cookie("mod_session_id", sessionId.toString());
         cookie.setMaxAge(1800);
         cookie.setPath("/");
         response.addCookie(cookie);
-        boards_cache.active_moder_sessions.put(session_id, boards_cache.getModByID(key));
-        String session_lambda = new String(session_id);
-        System.out.println("Adding cookie with session ID = " + session_id + " and " + cookie.getMaxAge() + " maxAge");
-        boards_cache.thread_pool.schedule(() -> {boards_cache.active_moder_sessions.remove(session_lambda);}, 1800, java.util.concurrent.TimeUnit.SECONDS);
+        boardsCache.activeModerSessions.put(sessionId, boardsCache.getModByID(key));
+        String sessionLambda = new String(sessionId);
+        boardsCache.threadPool.schedule(() -> {boardsCache.activeModerSessions.remove(sessionLambda);}, 3600, java.util.concurrent.TimeUnit.SECONDS);
         return new RedirectView("/takaba/mod_panel");
         }catch(Exception e){
             e.printStackTrace(System.out);
@@ -716,10 +717,10 @@ public class AjaxController{ // основной функциональный к
     @RequestMapping(value = "ban", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     @ResponseBody
     public String addBan(HttpServletRequest request){ // забанить
-        String mod_id = boards_cache.checkModerator(request);
-        if(mod_id == null)
+        String modId = boardsCache.checkModerator(request);
+        if(modId == null)
             return buildResponse("1", "Нет доступа");
-        if(boards_cache.active_moder_sessions.get(mod_id).getAccessLevel() < 2)
+        if(boardsCache.activeModerSessions.get(modId).getAccessLevel() < 2)
             return buildResponse("1", "Нет доступа");
         String board = request.getParameter("board");
         String post = request.getParameter("post");
@@ -735,8 +736,8 @@ public class AjaxController{ // основной функциональный к
             return buildResponse("1", "Отсутствуют необходимые параметры");
         if(permanent == null && (year == null || month == null || day == null || hour == null || minute == null))
             return buildResponse("1", "Отсутствуют необходимые параметры");
-        Board requested_board = boards_cache.getBoard(board);
-        String IP = boards_cache.getBoard(board).getPost(post).getIP();
+        Board requestedBoard = boardsCache.getBoard(board);
+        String IP = boardsCache.getBoard(board).getPost(post).getIP();
         Date expires = null;
         if(permanent == null){
             expires = new Date(
@@ -746,86 +747,86 @@ public class AjaxController{ // основной функциональный к
             Integer.parseInt(hour),
             Integer.parseInt(minute));
         }
-        boards_cache.addBan(permanent == null ? expires.getTime() : 0L, IP, requested_board.ban_reasons.get(Integer.parseInt(reason)), board, permanent == null ? false : true, global == null ? false : true, boards_cache.getBansCounter()+1L);
-        boards_cache.setBansCounter(boards_cache.getBansCounter()+1L);
-        return buildResponse("0", "Выдан бан № " + boards_cache.getBansCounter());
+        boardsCache.addBan(permanent == null ? expires.getTime() : 0L, IP, requestedBoard.banReasons.get(Integer.parseInt(reason)), board, permanent == null ? false : true, global == null ? false : true, boardsCache.getBansCounter()+1L);
+        boardsCache.setBansCounter(boards_cache.getBansCounter()+1L);
+        return buildResponse("0", "Выдан бан № " + boardsCache.getBansCounter());
     }
     
     @RequestMapping(value = "unban", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     @ResponseBody
     public String unban(HttpServletRequest request){ // разбанить
-        String mod_id = boards_cache.checkModerator(request);
-        if(mod_id == null || boards_cache.active_moder_sessions.get(mod_id).getAccessLevel() < 3){
+        String modId = boardsCache.checkModerator(request);
+        if(modId == null || boardsCache.activeModerSessions.get(modId).getAccessLevel() < 3){
             return buildResponse("1", "Нет доступа");
         }
         String id = request.getParameter("id");
         if(id == null){
             return buildResponse("1", "Не указан номер бана");
         }
-        Ban ban = boards_cache.getBanByID(id);
+        Ban ban = boardsCache.getBanByID(id);
         if(ban == null){
             return buildResponse("1", "Бан с таким ID не найден");
         }
-        ScheduledFuture ban_schedule = boards_cache.scheduled_unbans.get(id);
-        if(ban_schedule != null)
-            ban_schedule.cancel(false);
-        boards_cache.removeBan(boards_cache.getBanByID(id));
+        ScheduledFuture banSchedule = boardsCache.scheduledUnbans.get(id);
+        if(banSchedule != null)
+            banSchedule.cancel(false);
+        boardsCache.removeBan(boardsCache.getBanByID(id));
         return buildResponse("0", "Бан удалён");
     }
     
     private void ensureModeratorPersistence(Mod mod) throws IOException{ // общий функционал для добавления и редактирования модератора
         try{
-        File moders_file = new File(root_path + "/WEB-INF/mods.json");
-        JsonArrayBuilder boards_list_builder = Json.createArrayBuilder();
-        String[] mod_boards = mod.getBoards();
-        for(int a = 0; a < mod_boards.length; a++){
-            boards_list_builder.add(mod_boards[a]);
+        File modersFile = new File(rootPath + "/WEB-INF/mods.json");
+        JsonArrayBuilder boardsListBuilder = Json.createArrayBuilder();
+        String[] modBoards = mod.getBoards();
+        for(int a = 0; a < modBoards.length; a++){
+            boardsListBuilder.add(modBoards[a]);
         }
         JsonWriter writer;
-        if(!moders_file.exists()){
-            writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(moders_file), "UTF-8")));
+        if(!modersFile.exists()){
+            writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(modersFile), "UTF-8")));
             writer.writeArray(Json.createArrayBuilder()
                 .add(Json.createObjectBuilder()
                     .add("key", mod.getID())
                     .add("level", String.valueOf(mod.getAccessLevel()))
-                    .add("boards", boards_list_builder.build())
+                    .add("boards", boardsListBuilder.build())
                     .add("name", mod.getName())
                     .build())
             .build());
             writer.close();
         }else{
-            boolean is_present = false;
+            boolean isPresent = false;
             JsonArrayBuilder builder = Json.createArrayBuilder();
-            JsonReader reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(moders_file), "UTF-8")));
+            JsonReader reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(modersFile), "UTF-8")));
             JsonArray mods = reader.readArray();
             reader.close();
-            ArrayList<JsonObject> mods_list = new ArrayList<>(mods.getValuesAs(JsonObject.class));
-            for(int a = 0; a < mods_list.size(); a++){
-                if(mods_list.get(a).getString("key").equals(mod.getID())){
+            ArrayList<JsonObject> modsList = new ArrayList<>(mods.getValuesAs(JsonObject.class));
+            for(int a = 0; a < modsList.size(); a++){
+                if(modsList.get(a).getString("key").equals(mod.getID())){
                     builder.add(Json.createObjectBuilder()
                     .add("key", mod.getID())
                     .add("level", String.valueOf(mod.getAccessLevel()))
-                    .add("boards", boards_list_builder.build())
+                    .add("boards", boardsListBuilder.build())
                     .add("name", mod.getName())
                     .build());
                     is_present = true;
                 }else{
-                    builder.add(mods_list.get(a));
+                    builder.add(modsList.get(a));
                 }
             }
-            if(!is_present){
+            if(!isPresent){
                 builder.add(Json.createObjectBuilder()
                     .add("key", mod.getID())
                     .add("level", String.valueOf(mod.getAccessLevel()))
-                    .add("boards", boards_list_builder.build())
+                    .add("boards", boardsListBuilder.build())
                     .add("name", mod.getName())
                 .build());
             }
-            writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(moders_file), "UTF-8")));
+            writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(modersFile), "UTF-8")));
             writer.writeArray(builder.build());
             writer.close();
         }
-        boards_cache.addModerator(mod);
+        boardsCache.addModerator(mod);
         }catch(IOException e){
             throw e;
         }
@@ -855,12 +856,12 @@ public class AjaxController{ // основной функциональный к
     
     @RequestMapping(value = "mod_panel", method = RequestMethod.GET) // доступ к мод-панели
     public View access_mod_panel(HttpServletRequest request, HttpServletResponse response, Map<String, Object> model){
-        String modID = boards_cache.checkModerator(request);
+        String modID = boardsCache.checkModerator(request);
         String task = request.getParameter("task");
         if(task == null){
             if(modID != null){
-                model.put("name", boards_cache.active_moder_sessions.get(modID).getName());
-                model.put("access_level", boards_cache.active_moder_sessions.get(modID).getAccessLevel());
+                model.put("name", boardsCache.activeModerSessions.get(modID).getName());
+                model.put("access_level", boardsCache.activeModerSessions.get(modID).getAccessLevel());
                 return new JstlView("/WEB-INF/mod_panel.jsp");
             }else
                 return new InternalResourceView("/insufficient_previleges.html");
@@ -874,30 +875,30 @@ public class AjaxController{ // основной функциональный к
             case "login":
                 return new InternalResourceView("/mod_login_form.html");
             case "admin_panel":
-                if(boards_cache.active_moder_sessions.get(modID).getAccessLevel() < 4)
+                if(boardsCache.activeModerSessions.get(modID).getAccessLevel() < 4)
                     return new RedirectView("/takaba/mod_panel");
                 return new JstlView("/WEB-INF/admin_panel.html");
             case "view_reports":
                 ArrayList<Report> reports = new ArrayList<>();
-                String[] boards = boards_cache.active_moder_sessions.get(modID).getBoards();
+                String[] boards = boardsCache.activeModerSessions.get(modID).getBoards();
                 for(int a = 0; a < boards.length; a++){
-                    Board board = boards_cache.getBoard(boards[a]);
+                    Board board = boardsCache.getBoard(boards[a]);
                     if(board == null)
                         continue;
                     reports.addAll(board.getReports());
                 }
                 model.put("reports", reports);
-                model.put("cache", boards_cache);
+                model.put("cache", boardsCache);
                 return new JstlView("/WEB-INF/view_reports.jsp");
             case "view_bans":
-                ArrayList<Ban> bans_to_display = new ArrayList<>();
+                ArrayList<Ban> bansToDisplay = new ArrayList<>();
                 String id = request.getParameter("id");
                 if(id != null){
-                    Ban ban = boards_cache.getBanByID(id);
+                    Ban ban = boardsCache.getBanByID(id);
                     if(ban != null)
-                        bans_to_display.add(ban);
-                    model.put("bans", bans_to_display);
-                    model.put("cache", boards_cache);
+                        bansToDisplay.add(ban);
+                    model.put("bans", bansToDisplay);
+                    model.put("cache", boardsCache);
                     return new JstlView("/WEB-INF/view_bans.jsp");
                 }
                 int page;
@@ -908,18 +909,18 @@ public class AjaxController{ // основной функциональный к
                 }catch(Exception e){
                     page = 1;
                 }
-                ArrayList<Ban> bans_catalog = boards_cache.getBansCatalog();
-                for(int a = (page-1)*10; a < page*10 && a < bans_catalog.size(); a++){
-                    bans_to_display.add(bans_catalog.get(a));
+                ArrayList<Ban> bansCatalog = boardsCache.getBansCatalog();
+                for(int a = (page-1)*10; a < page*10 && a < bansCatalog.size(); a++){
+                    bansToDisplay.add(bansCatalog.get(a));
                 }
-                model.put("bans", bans_to_display);
+                model.put("bans", bansToDisplay);
                 model.put("cache", boards_cache);
                 return new JstlView("/WEB-INF/view_bans.jsp");
             case "logout":
-                boards_cache.active_moder_sessions.remove(modID);
-                Cookie mod_cookie = new Cookie("mod_session_id", "");
-                mod_cookie.setMaxAge(0);
-                response.addCookie(mod_cookie);
+                boardsCache.activeModerSessions.remove(modID);
+                Cookie modCookie = new Cookie("mod_session_id", "");
+                modCookie.setMaxAge(0);
+                response.addCookie(modCookie);
                 return new RedirectView("/");
             default:
                 return new JstlView("/res/mod_panel.jsp");
