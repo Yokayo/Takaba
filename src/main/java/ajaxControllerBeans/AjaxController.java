@@ -55,7 +55,7 @@ public class AjaxController{ // основной функциональный к
             String text = utfEncode((String) request.getParameter("contents"));
             ArrayList<String> repliesTo = new ArrayList<>();
             String[] parts = text.split(">>");
-            Board board = boardsCache.getBoard(board_id);
+            Board board = boardsCache.getBoard(boardId);
             if(board == null)
                 return buildResponse("1", "Доски не существует");
             ArrayList<Ban> bans = boardsСache.bansList.get(boardId);
