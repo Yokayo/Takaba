@@ -58,7 +58,7 @@ public class AjaxController{ // основной функциональный к
             Board board = boardsCache.getBoard(board_id);
             if(board == null)
                 return buildResponse("1", "Доски не существует");
-            ArrayList<Ban> bans = boardsСache.bansList.get(board_id);
+            ArrayList<Ban> bans = boardsСache.bansList.get(boardId);
             if(boardsСache.bansList.get("global_bans") != null) // проверяем не забанен ли клиент
                 bans.addAll(boards_cache.bansList.get("global_bans"));
             if(bans != null){
