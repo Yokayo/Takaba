@@ -4,23 +4,23 @@ import java.util.*;
 import rootContextBeans.*;
 
 public class Board{
-    public String id, title, desc, default_name;
+    public String id, title, desc, defaultName;
     private long total_posts = 0L;
     private ArrayList<trich.Thread> threads = new ArrayList<>();
     private ArrayList<Report> reports = new ArrayList<>();
     public boolean needsCatalogFlushing, needsSettingsFlushing = false;
-    public ArrayList<String> ban_reasons = new ArrayList<>();
-    private BoardsCache boards_cache;
-    public int max_file_size = 2;
+    public ArrayList<String> banReasons = new ArrayList<>();
+    private BoardsCache boardsCache;
+    public int maxFileSize = 2;
     public boolean delayedFlushingEnabled = false;
     
-    public Board(String id_, String title_, String desc_, String default_name_, String mfs, BoardsCache bc){//, String[] catalog_cache_){
+    public Board(String id_, String title_, String desc_, String defaultBame_, String mfs, BoardsCache bc){//, String[] catalog_cache_){
         title = title_;
         desc = desc_;
-        default_name = default_name_;
+        defaultName = defaultName_;
         id = id_;
-        boards_cache = bc;
-        max_file_size = Integer.parseInt(mfs);
+        boardsCache = bc;
+        maxFileSize = Integer.parseInt(mfs);
     }
     
     public void addThread(trich.Thread thread, boolean bump){
@@ -54,7 +54,7 @@ public class Board{
     }
     
     public void addBanReasonsSet(ArrayList<String> reasons){
-        ban_reasons.addAll(reasons);
+        banReasons.addAll(reasons);
     }
     
     public void addReport(Report report){
@@ -142,7 +142,7 @@ public class Board{
     }
     
     public void setDefaultName(String name){
-        default_name = name;
+        defaultName = name;
     }
     
     public String getTitle(){
@@ -158,7 +158,7 @@ public class Board{
     }
     
     public String getDefaultName(){
-        return default_name;
+        return defaultName;
     }
     
     public ArrayList<Report> getReports(){
