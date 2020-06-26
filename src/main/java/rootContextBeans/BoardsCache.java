@@ -48,14 +48,14 @@ public class BoardsCache{ // центральная часть борды - in-m
                             board.needsCatalogFlushing = false;
                             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(boardsFolder + "/" + boards.get(a).getID() + "//catalog.json"), false), "UTF-8"));
                             StringWriter stringWriter = new StringWriter();
-                            JsonWriter jsonWriter = Json.createWriter(string_writer);
+                            JsonWriter jsonWriter = Json.createWriter(stringWriter);
                             JsonArrayBuilder builder = Json.createArrayBuilder();
                             ArrayList<trich.Thread> threads = board.getThreads();
                             for(int b = 0; b < threads.size(); b++){
                                 builder.add(threads.get(b).getPost(0).getPostnum());
                             }
-                            json_writer.write(builder.build());
-                            json_writer.close();
+                            jsonWriter.write(builder.build());
+                            jsonWriter.close();
                             writer.write(stringWriter.toString());
                             writer.close();
                         }catch(Exception e){e.printStackTrace(System.out);}
@@ -67,14 +67,14 @@ public class BoardsCache{ // центральная часть борды - in-m
                             if(!configFile.exists())
                                 configFile.createNewFile();
                             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configFile, false), "UTF-8"));
-                            JsonWriter json_writer = Json.createWriter(writer);
+                            JsonWriter jsonWriter = Json.createWriter(writer);
                             JsonObjectBuilder builder = Json.createObjectBuilder();
                             builder.add("BoardTitle", board.getTitle());
                             builder.add("BoardInfo", board.getDesc());
                             builder.add("DefaultName", board.getDefaultName());
                             builder.add("MaxFileSize", board.maxFileSize);
                             builder.add("DelayedFlushing", board.delayedFlushingEnabled ? "true" : "false");
-                            json_writer.write(builder.build());
+                            jsonWriter.write(builder.build());
                             writer.close();
                         }catch(Exception e){e.printStackTrace(System.out);}
                     }
@@ -191,7 +191,7 @@ public class BoardsCache{ // центральная часть борды - in-m
                         JsonObject oppost, post;
                         String threadNum = catalog.get(threadsCounter).getString();
                         threadReader = new BufferedReader(new InputStreamReader(new FileInputStream(boardsFolder + "//" + boards[boardsCounter] + "//" + threadNum + ".json"), "UTF-8"));
-                        threadJson = thread_reader.readLine();
+                        threadJson = threadReader.readLine();
                         threadReader.close();
                         reader = Json.createReader(new BufferedReader(new StringReader(threadJson)));
                         ArrayList<JsonObject> posts = new ArrayList<>(reader.readObject().getJsonArray("posts").getValuesAs(JsonObject.class));
