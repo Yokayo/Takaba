@@ -14,7 +14,7 @@ import java.util.concurrent.*;
 import trich.*;
 
 
-@Component("boards_cache")
+@Component("boardsCache")
 @Scope("singleton")
 public class BoardsCache{ // центральная часть борды - in-memory storage
                           // хранит все доски, посты на них, IP, конфигурацию досок, модераторов, баны и т.д.
@@ -114,10 +114,10 @@ public class BoardsCache{ // центральная часть борды - in-m
                 if(needsImagesFlushing){ // флашинг картинок
                     try{
                         CachedImage img;
-                        Iterator i = images_cache.keySet().iterator();
+                        Iterator i = imagesCache.keySet().iterator();
                         while(i.hasNext()){
                             String path = (String) i.next();
-                            img = images_cache.get(path);
+                            img = imagesCache.get(path);
                             File file = new File(path);
                             file.getParentFile().mkdirs();
                             file.createNewFile();
