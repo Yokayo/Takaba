@@ -60,7 +60,7 @@ public class AjaxController{ // основной функциональный к
                 return buildResponse("1", "Доски не существует");
             ArrayList<Ban> bans = boardsСache.bansList.get(boardId);
             if(boardsСache.bansList.get("global_bans") != null) // проверяем не забанен ли клиент
-                bans.addAll(boards_cache.bansList.get("global_bans"));
+                bans.addAll(boardsCache.bansList.get("global_bans"));
             if(bans != null){
                 for(int a = 0; a < bans.size(); a++){
                     if(bans.get(a).getIP().equals(request.getRemoteAddr())){
@@ -288,7 +288,7 @@ public class AjaxController{ // основной функциональный к
                 board.needsCatalogFlushing = true;
                 cached_thread.needsFlushing = true;
             }else{
-                boards_cache.flushThread(cachedThread);
+                boardsCache.flushThread(cachedThread);
             }
             return buildResponse("0", "Сообщение отправлено");
         }catch(Exception e){
@@ -317,7 +317,7 @@ public class AjaxController{ // основной функциональный к
         if(id == null){
             return buildResponse("1", "Не указана доска");
         }
-        Board board = boards_cache.getBoard(id);
+        Board board = boardsCache.getBoard(id);
         if(board == null){
             return buildResponse("1", "Доски не существует");
         }
@@ -336,7 +336,7 @@ public class AjaxController{ // основной функциональный к
     @RequestMapping(value = "config", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     @ResponseBody
     public String changeConfig(HttpServletRequest request){ // отредактировать настройки доски
-        String modId = boards_cache.checkModerator(request);
+        String modId = boardsCache.checkModerator(request);
         if(modId == null)
             return buildResponse("1", "Нет доступа");
         if(boardsCache.activeModerSessions.get(mod_id).getAccessLevel() < 4)
@@ -408,7 +408,7 @@ public class AjaxController{ // основной функциональный к
         ArrayList<String> postsList = new ArrayList<>();
         for(int a = 0; a < posts.length; a++)
             postsList.add(posts[a]);
-        boardsCache.getBoard(board).addReport(new Report(board, postsList, text, ip, String.valueOf(boards_cache.getReportsCounter()+1)));
+        boardsCache.getBoard(board).addReport(new Report(board, postsList, text, ip, String.valueOf(boardsCache.getReportsCounter()+1)));
         boardsCache.setReportsCounter(boardsCache.getReportsCounter()+1);
         File reportsFile = new File(rootPath + "//res//" + board + "//reports.json");
         JsonArrayBuilder builder = Json.createArrayBuilder();
@@ -490,7 +490,7 @@ public class AjaxController{ // основной функциональный к
         }
         String boardId = request.getParameter("board");
         boolean applicable = false;
-        String[] boards = boards_cache.activeModerSessions.get(modId).getBoards();
+        String[] boards = boardsCache.activeModerSessions.get(modId).getBoards();
         for(int a = 0; a < boards.length; a++){
             if(boards[a].equals(boardId)){
                 applicable = true;
@@ -520,7 +520,7 @@ public class AjaxController{ // основной функциональный к
     @ResponseBody
     public String addModer(HttpServletRequest request){ // добавить модератора
         try{
-        if(boards_cache.checkModerator(request) == null)
+        if(boardsCache.checkModerator(request) == null)
             return buildResponse("1", "Нет доступа");
         String al = request.getParameter("level");
         String boards_raw = request.getParameter("boards");
@@ -572,7 +572,7 @@ public class AjaxController{ // основной функциональный к
     @ResponseBody
     public String editModer(HttpServletRequest request){ // изменить данные модератора
         try{
-        String modId = boards_cache.checkModerator(request);
+        String modId = boardsCache.checkModerator(request);
         if(modId == null)
             return buildResponse("1", "Нет доступа");
         if(boardsCache.activeModerSessions.get(modId).getAccessLevel() < 4)
@@ -614,7 +614,7 @@ public class AjaxController{ // основной функциональный к
     @ResponseBody
     public String deleteModer(HttpServletRequest request){ // удалить модератора
         try{
-        String modId = boards_cache.checkModerator(request);
+        String modId = boardsCache.checkModerator(request);
         if(modId == null)
             return buildResponse("1", "Нет доступа");
         if(boardsCache.activeModerSessions.get(modId).getAccessLevel() < 4)
@@ -664,7 +664,7 @@ public class AjaxController{ // основной функциональный к
         if(boardsCache.activeModerSessions.get(modId).getAccessLevel() < 4)
             return buildResponse("1", "Нет доступа");
         JsonArrayBuilder builder = Json.createArrayBuilder();
-        ArrayList<Mod> mods = new ArrayList<>(boards_cache.mods_list.values());
+        ArrayList<Mod> mods = new ArrayList<>(boardsCache.mods_list.values());
         for(int a = 0; a < mods.size(); a++){
             Mod mod = mods.get(a);
             String boards = "";
@@ -748,7 +748,7 @@ public class AjaxController{ // основной функциональный к
             Integer.parseInt(minute));
         }
         boardsCache.addBan(permanent == null ? expires.getTime() : 0L, IP, requestedBoard.banReasons.get(Integer.parseInt(reason)), board, permanent == null ? false : true, global == null ? false : true, boardsCache.getBansCounter()+1L);
-        boardsCache.setBansCounter(boards_cache.getBansCounter()+1L);
+        boardsCache.setBansCounter(boardsCache.getBansCounter()+1L);
         return buildResponse("0", "Выдан бан № " + boardsCache.getBansCounter());
     }
     
@@ -914,7 +914,7 @@ public class AjaxController{ // основной функциональный к
                     bansToDisplay.add(bansCatalog.get(a));
                 }
                 model.put("bans", bansToDisplay);
-                model.put("cache", boards_cache);
+                model.put("cache", boardsCache);
                 return new JstlView("/WEB-INF/view_bans.jsp");
             case "logout":
                 boardsCache.activeModerSessions.remove(modID);
