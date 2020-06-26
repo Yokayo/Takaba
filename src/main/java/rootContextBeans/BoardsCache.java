@@ -165,7 +165,7 @@ public class BoardsCache{ // центральная часть борды - in-m
             try{
                 File boardConfig;
                 Board board;
-                board_config = new File(boardsFolder + "/" + boards[boardsCounter] + "/board_config.json");
+                boardConfig = new File(boardsFolder + "/" + boards[boardsCounter] + "/board_config.json");
                 if(!boardConfig.exists()) // доска без настроек
                     continue;
                 reader = Json.createReader(new BufferedReader(new InputStreamReader(new FileInputStream(boardConfig), "UTF-8")));
