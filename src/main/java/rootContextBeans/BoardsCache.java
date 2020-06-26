@@ -46,7 +46,7 @@ public class BoardsCache{ // центральная часть борды - in-m
                     if(board.needsCatalogFlushing){ // флашинг каталога тредов
                         try{
                             board.needsCatalogFlushing = false;
-                            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(boards_folder + "/" + boards.get(a).getID() + "//catalog.json"), false), "UTF-8"));
+                            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(boardsFolder + "/" + boards.get(a).getID() + "//catalog.json"), false), "UTF-8"));
                             StringWriter stringWriter = new StringWriter();
                             JsonWriter jsonWriter = Json.createWriter(string_writer);
                             JsonArrayBuilder builder = Json.createArrayBuilder();
@@ -63,7 +63,7 @@ public class BoardsCache{ // центральная часть борды - in-m
                     if(board.needsSettingsFlushing){ // флашинг настроек доски
                         try{
                             board.needsSettingsFlushing = false;
-                            File configFile = new File(boards_folder + "/" + boards.get(a).getID() + "/board_config.json");
+                            File configFile = new File(boardsFolder + "/" + boards.get(a).getID() + "/board_config.json");
                             if(!configFile.exists())
                                 configFile.createNewFile();
                             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configFile, false), "UTF-8"));
@@ -105,7 +105,7 @@ public class BoardsCache{ // центральная часть борды - in-m
                             .add("global", ban.isGlobal() ? "true" : "false")
                             .build());
                         }
-                        JsonWriter writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(root_path + "WEB-INF/bans.json"), false), "UTF-8")));
+                        JsonWriter writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File(rootPath + "WEB-INF/bans.json"), false), "UTF-8")));
                         writer.writeArray(builder.build());
                         writer.close();
                         needsBansFlushing = false;
@@ -179,7 +179,7 @@ public class BoardsCache{ // центральная часть борды - in-m
                 try{
                     board.delayedFlushingEnabled = Boolean.parseBoolean(config.getString("DelayedFlushing"));
                 }catch(Exception e){}
-                File boardCatalog = new File(boards_folder + "/" + boards[boardsCounter] + "/catalog.json");
+                File boardCatalog = new File(boardsFolder + "/" + boards[boardsCounter] + "/catalog.json");
                 board.addBanReasonsSet(generalBanReasons);
                 if(boardCatalog.exists()){
                     reader = Json.createReader(new BufferedReader(new FileReader(boardCatalog)));
@@ -336,7 +336,7 @@ public class BoardsCache{ // центральная часть борды - in-m
     }
     
     public void flushThread(trich.Thread thread) throws IOException{
-        File threadFile = new File(root_path + "res/" + thread.getBoard() + "/" + thread.getPost(0).getPostnum() + ".json");
+        File threadFile = new File(rootPath + "res/" + thread.getBoard() + "/" + thread.getPost(0).getPostnum() + ".json");
         if(!threadFile.exists())
             threadFile.createNewFile();
         JsonWriter writer = Json.createWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(threadFile, false), "UTF-8")));
