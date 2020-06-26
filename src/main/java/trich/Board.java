@@ -5,7 +5,7 @@ import rootContextBeans.*;
 
 public class Board{
     public String id, title, desc, defaultName;
-    private long total_posts = 0L;
+    private long totalPosts = 0L;
     private ArrayList<trich.Thread> threads = new ArrayList<>();
     private ArrayList<Report> reports = new ArrayList<>();
     public boolean needsCatalogFlushing, needsSettingsFlushing = false;
@@ -62,11 +62,11 @@ public class Board{
     }
     
     public void setTotalPosts(long p){
-        total_posts = p;
+        totalPosts = p;
     }
     
     public long getTotalPosts(){
-        return total_posts;
+        return totalPosts;
     }
     
     public Post getPost(String num){
