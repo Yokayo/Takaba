@@ -14,7 +14,7 @@ public class Board{
     public int maxFileSize = 2;
     public boolean delayedFlushingEnabled = false;
     
-    public Board(String id_, String title_, String desc_, String defaultBame_, String mfs, BoardsCache bc){//, String[] catalog_cache_){
+    public Board(String id_, String title_, String desc_, String defaultName_, String mfs, BoardsCache bc){//, String[] catalog_cache_){
         title = title_;
         desc = desc_;
         defaultName = defaultName_;
