@@ -9,7 +9,6 @@ public class TrichDict{
     public static Map<Integer, String> months = new HashMap<>();
     
     static {
-        System.out.println("Static TrichDict initializing");
         months.put(0, "Янв");
         months.put(1, "Фев");
         months.put(2, "Мар");
