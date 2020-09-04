@@ -64,7 +64,7 @@
                 </div>
             </div>
             <c:if test="${missed_posts.get(post.postnum) != null}">
-                <div class="thread_missed">${missed_posts.get(post.postnum)} Нажмите <a href="${post.postnum}">ответ</a>, чтобы посмотреть.</div>
+                <div class="thread_missed">${missed_posts.get(post.postnum)} Нажмите <a href="/boards/${board_id}/${post.postnum}">ответ</a>, чтобы посмотреть.</div>
             </c:if>
             <c:if test="${post.numInThread == post.thread.posts.size()}">
                 </div>
