@@ -38,7 +38,7 @@ public class Post{
     @Column(name = "`numInThread`")
     private int nit;
     
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "thread")
     private trich.Thread thread;
     

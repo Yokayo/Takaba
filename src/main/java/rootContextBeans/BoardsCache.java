@@ -143,10 +143,12 @@ public class BoardsCache{ // центральная часть борды - in-m
             thread.setNum(post.getPostnum());
             thread.addPost(post);
             board.addThread(thread, true);
+            persistObject(post);
             persistObject(thread);
         }else{
             post.setThread(thread);
             thread.addPost(post);
+            persistObject(post);
             mergeObject(thread);
         }
         board.setTotalPosts(board.getTotalPosts()+1L);

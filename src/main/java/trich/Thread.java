@@ -13,7 +13,7 @@ import rootContextBeans.BoardsCache;
 @Table(name = "threads")
 public class Thread{
     
-    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
+    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "thread")
     private List<Post> posts = new ArrayList<>();
     
