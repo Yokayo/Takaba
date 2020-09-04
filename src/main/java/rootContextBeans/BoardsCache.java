@@ -44,7 +44,7 @@ public class BoardsCache{ // центральная часть борды - in-m
     private ScheduledThreadPoolExecutor threadPool = new ScheduledThreadPoolExecutor(20); // потоки для других задач
     private long reportsCounter = 0; // счётчик жалоб для присвоения ID
     private long bansCounter = 0; // счётчик банов для ID
-    private Session session; // persistence context
+    SessionFactory sessionFactory;
     
     
     @PostConstruct
@@ -52,21 +52,24 @@ public class BoardsCache{ // центральная часть борды - in-m
         allowedFileExtensions.add("jpg");
         allowedFileExtensions.add("jpeg");
         allowedFileExtensions.add("png");
-        SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+        sessionFactory = new Configuration().configure().buildSessionFactory();
         try{
-            session = sessionFactory.openSession();
+            Session session = sessionFactory.openSession();
             org.hibernate.query.Query query = session.createQuery("FROM Board");
             List<Board> boards = query.list();
             for(int a = 0; a < boards.size(); a++){
                 Board board = boards.get(a);
+                session.update(board);
                 boardsList.put(board.getID(), board);
             }
             query = session.createQuery("FROM Mod");
             List<Mod> mods = query.getResultList();
             for(int a = 0; a < mods.size(); a++){
                 Mod moder = mods.get(a);
+                session.update(moder);
                 modsList.put(moder.getID(), moder);
             }
+            session.close();
         }catch(HibernateException e){}
     }
     
@@ -133,14 +136,21 @@ public class BoardsCache{ // центральная часть борды - in-m
             return;
         trich.Thread thread = post.getThread();
         if(thread == null){
+            System.out.println("Saving post with num " + post.getPostnum() + ", its thread is null.");
             thread = new trich.Thread();
+            thread.setBoard(board);
+            post.setThread(thread);
+            thread.setNum(post.getPostnum());
             thread.addPost(post);
             board.addThread(thread, true);
             persistObject(thread);
         }else{
+            post.setThread(thread);
             thread.addPost(post);
-            persistObject(post);
+            mergeObject(thread);
         }
+        board.setTotalPosts(board.getTotalPosts()+1L);
+        mergeObject(board);
     }
     
     public void removePost(Board board, String postnum){
@@ -159,7 +169,6 @@ public class BoardsCache{ // центральная часть борды - in-m
                 thumbImage.delete();
         });
         post.getThread().removePost(post);
-        removeObject(post);
     }
     
     public long getReportsCounter(){
@@ -248,6 +257,7 @@ public class BoardsCache{ // центральная часть борды - in-m
     
     public void persistObject(Object object){
         try{
+            Session session = sessionFactory.openSession();
             session.persist(object);
             Transaction transaction = session.getTransaction();
             transaction.begin();
@@ -258,6 +268,7 @@ public class BoardsCache{ // центральная часть борды - in-m
     
     public void mergeObject(Object object){
         try{
+            Session session = sessionFactory.openSession();
             session.merge(object);
             Transaction transaction = session.getTransaction();
             transaction.begin();
@@ -268,6 +279,7 @@ public class BoardsCache{ // центральная часть борды - in-m
     
     public void removeObject(Object object){
         try{
+            Session session = sessionFactory.openSession();
             session.delete(object);
             Transaction transaction = session.getTransaction();
             transaction.begin();
@@ -280,7 +292,6 @@ public class BoardsCache{ // центральная часть борды - in-m
     public void finalizer(){
         threadPool.shutdown();
         banTasks.shutdown();
-        session.close();
     }
     
     public void printError(String errorText){

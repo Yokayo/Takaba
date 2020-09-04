@@ -23,7 +23,8 @@ public class Board{
     @ManyToMany(mappedBy = "boards")
     private List<Mod> moders;
     
-    @Transient private long totalPosts = 0L;
+    @Column(name = "postcount")
+    private long totalPosts;
     
     @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "board")
@@ -35,7 +36,7 @@ public class Board{
     @ElementCollection(fetch = FetchType.LAZY, targetClass = String.class)
     @CollectionTable(
         name = "`banReasons`",
-        joinColumns = @JoinColumn(name = "boardID")
+        joinColumns = @JoinColumn(name = "`boardID`")
     )
     private List<String> banReasons;
     

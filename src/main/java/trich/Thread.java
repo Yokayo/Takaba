@@ -13,14 +13,15 @@ import rootContextBeans.BoardsCache;
 @Table(name = "threads")
 public class Thread{
     
-    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.ALL)
     @JoinColumn(name = "thread")
     private List<Post> posts = new ArrayList<>();
     
     @Column(name = "num")
     private String num;
     
-    @Transient private int postcount = 0;
+    @Column(name = "postcount")
+    private int postcount;
     
     @ManyToOne
     @JoinColumn(name = "board")
@@ -45,18 +46,21 @@ public class Thread{
     @Column(name = "`globalID`")
     private long id;
     
+    public Thread(){postcount = 0;}
+    
     public void addPost(Post postToAdd){
         postToAdd.setNumInThread(postcount+1);
         if(postcount == 0){
             num = postToAdd.getPostnum();
             String message = postToAdd.getMessage();
             if(message.length() > 50)
-                title = message.substring(0, 50) + "...";
+                title = message.substring(0, 50).trim() + "...";
             else
                 title = message;
         }
         posts.add(postToAdd);
-        postcount ++;
+        postcount = postcount + 1;
+        System.out.println("Post added. Thread postcount = " + postcount);
         this.rebuildJSON();
         board.bumpThread(this);
     }
@@ -67,6 +71,7 @@ public class Thread{
         posts.remove(postToRemove); // TODO remove pics files on post deletion
         postcount --;
         this.rebuildJSON();
+        board.setTotalPosts(board.getTotalPosts()-1L);
     }
     
     public int getPostcount(){
@@ -97,8 +102,16 @@ public class Thread{
         return num;
     }
     
+    public void setNum(String num_){
+        num = num_;
+    }
+    
     public Board getBoard(){
         return board;
+    }
+    
+    public void setBoard(Board board_){
+        board = board_;
     }
     
     public String getTitle(){
@@ -106,14 +119,22 @@ public class Thread{
     }
     
     private void rebuildJSON(){
-        postcount = posts.size();
         JsonArrayBuilder builder = Json.createArrayBuilder();
         for(int a = 0; a < posts.size(); a++){
             Post post = posts.get(a);
-            builder.add(buildPostIgnoreEncoding(post.getPostnum(), post.getThread().getNum(), post.getName(), post.getDate(), post.getSubject(), post.getTripcode(), post.getMessage(), post.getPics(), post.isOP(), post.getRepliedPosts(), post.getReplies()));
+            builder.add(buildPostIgnoreEncoding(post.getPostnum(),
+            num,
+            post.getName(),
+            post.getDate(),
+            post.getSubject(),
+            post.getTripcode(),
+            post.getMessage(),
+            post.getPics(),
+            post.isOP(),
+            post.getRepliedPosts(),
+            post.getReplies()));
         }
         json = Json.createObjectBuilder().add("posts", builder.build()).build().toString();
-        postcount --;
         builder = Json.createArrayBuilder();
         Post oppost = posts.get(0);
         builder.add(buildPostIgnoreEncoding(oppost.getPostnum(), oppost.getPostnum(), oppost.getName(), oppost.getDate(), oppost.getSubject(), oppost.getTripcode(), oppost.getMessage(), oppost.getPics(), true, oppost.getRepliedPosts(), oppost.getReplies()));
@@ -157,10 +178,6 @@ public class Thread{
             .add("replies_to", repliesTo_array.build())
             .add("replied_by", repliedBy_array.build())
             .build();
-    }
-    
-    public long getId(){
-        return id;
     }
     
     public String getJSON(){

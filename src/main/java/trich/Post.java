@@ -30,6 +30,8 @@ public class Post{
     private String IP;
     
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "posts_global_IDs_generator")
+    @SequenceGenerator(name = "posts_global_IDs_generator", sequenceName = "`posts_globalID_seq`", allocationSize = 1)
     @Column(name = "`globalID`")
     private long id;
     
@@ -155,8 +157,8 @@ public class Post{
     
     public void setThread(trich.Thread thread_){
         thread = thread_;
-        nit = 123;
-        isOppost = nit == 0;
+        nit = thread.getPosts().size()+1;
+        isOppost = nit == 1;
     }
 
 }

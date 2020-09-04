@@ -180,7 +180,6 @@ public class AjaxController{ // основной функциональный к
                         fullImageMetadata.setMetadata("(" + Math.ceil(rawFullSizeData.length/8/1024) + "Кб, " + width + "x" + height + ")");
                         fullImageMetadata.setPath(fullPath);
                         fullImageMetadata.setThumbPath(thumbPath);
-                        boardsCache.persistObject(fullImageMetadata);
                         // saving image done
                         files.add(fullImageMetadata);
                     }catch(Exception e){
@@ -212,7 +211,6 @@ public class AjaxController{ // основной функциональный к
                                  text, files, false, request.getRemoteAddr(), repliesTo,
                                  new ArrayList<>()); // обновление кэша
             boardsCache.addPost(board, post);
-            board.setTotalPosts(board.getTotalPosts()+1L);
             return buildResponse("0", "Сообщение отправлено");
     }
     
