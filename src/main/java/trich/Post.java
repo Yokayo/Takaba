@@ -2,16 +2,64 @@ package trich;
 
 import java.util.*;
 import javax.json.*;
+import javax.persistence.*;
 
+@Entity
+@Table(name = "posts")
 public class Post{
+    
+    @Column(name = "number")
+    private String postnum;
+    
+    @Column(name = "name")
+    private String name;
+    
+    @Column(name = "tripcode")
+    private String trip;
+    
+    @Column(name = "date")
+    private String date;
+    
+    @Column(name = "subject")
+    private String subject;
+    
+    @Column(name = "message")
+    private String message;
+    
+    @Column(name = "`IP`")
+    private String IP;
+    
+    @Id
+    @Column(name = "`globalID`")
+    private long id;
+    
+    @Column(name = "`numInThread`")
+    private int nit;
+    
+    @OneToOne
+    @JoinColumn(name = "thread")
+    private trich.Thread thread;
+    
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "`postID`")
+    private List<CachedImage> pics; // массив ID картинок
+    
+    @Transient private boolean isOppost;
+    
+    @ManyToMany
+    @JoinTable(
+        name = "`repliesMap`",
+        joinColumns = @JoinColumn(name = "original_post"),
+        inverseJoinColumns = @JoinColumn(name = "reply_post")
+    )
+    private List<Post> repliedBy;
+    
+    @ManyToMany(mappedBy = "repliedBy")
+    private List<Post> isReplyTo;
 
-    private String postnum, name, trip, date, subject, message, thread, IP;
-    private ArrayList<JsonObject> pics;
-    private boolean isOppost;
-    private int numInThread;
-    private ArrayList<String> repliedBy, isReplyTo;
-
-    public Post(String postnum_, String t, int nit, String name_, String trip_, String date_, String subject_, String message_, boolean op, String ip){
+    public Post(){}
+    
+    public Post(String postnum_, trich.Thread t, String name_, String trip_, String date_, String subject_, String message_, boolean op, String ip){
         postnum = postnum_;
         name = name_;
         trip = trip_;
@@ -19,13 +67,11 @@ public class Post{
         subject = subject_;
         message = message_;
         isOppost = op;
-        pics = new ArrayList<>();
-        numInThread = nit;
         thread = t;
         IP = ip;
     }
 
-    public Post(String postnum_, String t, int nit, String name_, String trip_, String date_, String subject_, String message_, ArrayList<JsonObject> pics_, boolean op, String ip, ArrayList<String> repliesTo_, ArrayList<String> repliedBy_){
+    public Post(String postnum_, trich.Thread t, String name_, String trip_, String date_, String subject_, String message_, List<CachedImage> pics_, boolean op, String ip, List<Post> repliesTo_, List<Post> repliedBy_){
         postnum = postnum_;
         name = name_;
         trip = trip_;
@@ -34,14 +80,13 @@ public class Post{
         message = message_;
         isOppost = op;
         pics = pics_;
-        numInThread = nit;
         thread = t;
         IP = ip;
         isReplyTo = repliesTo_;
         repliedBy = repliedBy_;
     }
 
-    public String getThread(){
+    public trich.Thread getThread(){
         return thread;
     }
     
@@ -69,32 +114,34 @@ public class Post{
         return message;
     }
     
-    public ArrayList<String> getRepliedPosts(){
+    public int getNumInThread(){
+        return nit;
+    }
+    
+    public void setNumInThread(int nit_){
+        nit = nit_;
+    }
+    
+    public List<Post> getRepliedPosts(){
         return isReplyTo;
     }
     
-    public ArrayList<String> getReplies(){
+    public List<Post> getReplies(){
         return repliedBy;
     }
     
     public void addReply(String postnum){
-        if(!repliedBy.contains(postnum))
-            repliedBy.add(postnum);
+        Post reply = getThread().getBoard().getPost(postnum);
+        if(reply == null)
+            return;
+        repliedBy.add(reply); // TODO contains check (?)
     }
     
-    public void removeReply(String postnum){
-        repliedBy.remove(postnum);
+    public void removeReply(Post post){
+        repliedBy.remove(post);
     }
     
-    public int getNumInThread(){
-        return numInThread;
-    }
-    
-    public void setNumInThread(int num_){
-        numInThread = num_;
-    }
-    
-    public ArrayList<JsonObject> getPics(){
+    public List<CachedImage> getPics(){
         return pics;
     }
     
@@ -104,6 +151,12 @@ public class Post{
     
     public String getIP(){
         return IP;
+    }
+    
+    public void setThread(trich.Thread thread_){
+        thread = thread_;
+        nit = 123;
+        isOppost = nit == 0;
     }
 
 }

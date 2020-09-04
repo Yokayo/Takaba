@@ -51,18 +51,7 @@ a:hover{
     background-origin: padding-box;
     background-clip: border-box;
     background-color: rgb(234, 234, 234);
-    border-top-color: rgb(202, 202, 202);
-    border-left-color: rgb(202, 202, 202);
-    border-right-color: rgb(202, 202, 202);
-    border-bottom-color: rgb(202, 202, 202);
-    border-top-width: 1px;
-    border-left-width: 1px;
-    border-right-width: 1px;
-    border-bottom-width: 1px;
-    border-top-style: solid;
-    border-left-style: solid;
-    border-right-style: solid;
-    border-bottom-style: solid;
+    border: 1px solid rgb(202, 202, 202);
     flex-grow: 1;
     cursor: pointer;
 }
@@ -72,7 +61,7 @@ a:hover{
 }
 
 .line{
-    width: 1243px;
+    width: 90%;
     height: 1px;
     position: static;
     left: 10px;
@@ -82,10 +71,7 @@ a:hover{
 
 .main_page_section{
     background: #FCFCFC;
-    border-bottom: 1px solid #D7D7D7;
-    border-left: 1px solid #D7D7D7;
-    border-right: 1px solid #D7D7D7;
-    border-top: 1px solid #D7D7D7;
+    border: 1px solid #D7D7D7;
     box-sizing: border-box;
     color: #333333;
     display: inline-block;
@@ -299,19 +285,7 @@ input:focus, textarea:focus{
 .select_list{
     position: absolute;
     display: none;
-    border-top-color: rgb(128, 128, 128);
-    border-left-color: rgb(128, 128, 128);
-    border-right-color: rgb(128, 128, 128);
-    border-bottom-color: rgb(128, 128, 128);
-    border-top-width: 1px;
-    border-left-width: 1px;
-    border-right-width: 1px;
-    border-bottom-width: 1px;
-    border-top-style: solid;
-    border-left-style: solid;
-    border-right-style: solid;
-    border-bottom-style: solid;
-    position:absolute;
+    border: 1px solid rgb(128, 128, 128);
     background-color: #ccc;
     border-radius: 2px;
     padding:0;
@@ -399,18 +373,7 @@ input:focus, textarea:focus{
     background-origin: padding-box;
     background-clip: border-box;
     background-color: rgb(234, 234, 234);
-    border-top-color: rgb(202, 202, 202);
-    border-left-color: rgb(202, 202, 202);
-    border-right-color: rgb(202, 202, 202);
-    border-bottom-color: rgb(202, 202, 202);
-    border-top-width: 1px;
-    border-left-width: 1px;
-    border-right-width: 1px;
-    border-bottom-width: 1px;
-    border-top-style: solid;
-    border-left-style: solid;
-    border-right-style: solid;
-    border-bottom-style: solid;
+    border: 1px solid rgb(202, 202, 202);
 }
 
 .qr_header{

@@ -29,12 +29,12 @@
                     <th class="bans_table_header_cb"></th>
                 </thead>
             <c:forEach items="${bans}" var="ban">
-            <tr class="bans_table_row bans_table_${ban.getID()}">
-            <td>${ban.getID()}</td>
-            <td>${ban.getIP()}</td>
-            <td>${ban.getReason()}${(ban.isGlobal() ? "" : "//!")}${(ban.isGlobal() ? "" : ban.getBoard())}</td>
-            <td>${ban.isPermanent() ? "" : ban.getHumanReadableExpirationDate()}</td>
-            <td><div class="delete_items_link unban_link" data-num="${ban.getID()}">Разбанить</div></td>
+            <tr class="bans_table_row bans_table_${ban.ID}">
+            <td>${ban.ID}</td>
+            <td>${ban.IP}</td>
+            <td>${ban.reason}${(ban.isGlobal() ? "" : "//!"}${ban.isGlobal() ? "" : ban.board)}</td>
+            <td>${ban.isPermanent() ? "" : ban.humanReadableExpirationDate}</td>
+            <td><div class="delete_items_link unban_link" data-num="${ban.ID}">Разбанить</div></td>
             </tr></c:forEach>
             </table>
             <br/>

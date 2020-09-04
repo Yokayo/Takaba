@@ -2,10 +2,13 @@ package viewControllerBeans;
 
 import java.util.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.JstlView;
 import org.springframework.web.servlet.view.InternalResourceView;
@@ -14,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.ServletContext;
 import java.io.*;
 import javax.json.*;
@@ -26,9 +30,12 @@ import rootContextBeans.*;
 public class ViewController{
     
     @Inject private ServletContext ctx;
-    @Inject private BoardsCache boards_cache;
-    private HTMLGenerator generator = new HTMLGenerator();
-    private String root_path = System.getProperty("catalina.base") + "//webapps//ROOT//";
+    @Inject private BoardsCache boardsCache;
+    private StringBuilder missedMessageBuilder = new StringBuilder(22);
+    
+    {
+        missedMessageBuilder.append("Пропущен");
+    }
     
     @GetMapping(value = "")
     public View mainPage(){
@@ -36,56 +43,138 @@ public class ViewController{
     }
     
 	@GetMapping(value = "{board}")
-	public View simple1(Map<String, Object> model, @PathVariable("board") String board_id, HttpServletRequest request) {
-        if(board_id.equals("boards")){
+	public View displayBoard(Map<String, Object> model,
+                             @PathVariable("board") String boardId,
+                             @CookieValue(defaultValue = "") String modSessionID,
+                             HttpServletRequest request) {
+        if(boardId.equals("boards")){
             return new RedirectView("/");
         }
-        Board board = boards_cache.getBoard(board_id);
-        ArrayList<Post> posts_to_display = new ArrayList<>();
-        ArrayList<trich.Thread> threads_to_display = board.getFirstNThreads(10);
-        trich.Thread thread;
-        ArrayList<Post> array;
-        HashMap<String, String> posts_missed = new HashMap<>();
-        for(int a = 0; a < threads_to_display.size(); a++){
-            array = threads_to_display.get(a).getPostsToDisplay();
-            posts_to_display.addAll(array);
-            if(threads_to_display.get(a).getPostcount() > 4){
-                int missed = threads_to_display.get(a).getPostcount() - array.size();
-                int modulo = missed%10;
-                posts_missed.put(threads_to_display.get(a).getPost(0).getPostnum(), "Пропущен"
-                + (modulo == 1 ? "" : "о")
-                + " "
-                + missed
-                + (modulo == 1 ? " пост." : modulo > 1 && modulo < 5 ? " поста." : " постов."));
-            }else{
-                posts_missed.put(threads_to_display.get(a).getPost(0).getPostnum(), null);
-            }
+        Board board = boardsCache.getBoard(boardId);
+        if(board == null){
+            return new RedirectView("/");
         }
-        model.put("ban_reasons", board.ban_reasons);
+        ArrayList<Post> postsToDisplay = new ArrayList<>();
+        ArrayList<trich.Thread> threadsToDisplay = board.getFirstNThreads(10);
+        trich.Thread thread;
+        List<Post> array;
+        HashMap<String, String> postsMissed = new HashMap<>();
+        for(int a = 0; a < threadsToDisplay.size(); a++){
+            array = threadsToDisplay.get(a).getPostsToDisplay();
+            postsToDisplay.addAll(array);
+            if(threadsToDisplay.get(a).getPostcount() <= 4)
+                continue;
+            int missed = threadsToDisplay.get(a).getPostcount() - array.size();
+            int modulo = missed%10;
+            postsMissed.put(threadsToDisplay.get(a).getPost(0).getPostnum(),
+            missedMessageBuilder.append(modulo == 1 ? "" : "о")
+            .append(" ")
+            .append(missed)
+            .append(modulo == 1 ? " пост." : modulo > 1 && modulo < 5 ? " поста." : " постов.")
+            .toString());
+            missedMessageBuilder.delete(8, missedMessageBuilder.capacity());
+        }
+        model.put("ban_reasons", board.getBanReasons());
         model.put("board", board);
-        model.put("board_id", board_id);
-        model.put("board_desc", board == null ? "No desc" : board.getDesc());
-        model.put("board_title", board == null ? board_id : board.getTitle());
-        model.put("posts", posts_to_display);
-        model.put("missed_posts", posts_missed);
-        model.put("generator", generator);
-        model.put("isModerator", boards_cache.checkModerator(request) != null);
+        model.put("board_id", boardId);
+        model.put("board_desc", board.getDesc());
+        model.put("board_title", board.getTitle());
+        model.put("posts", postsToDisplay);
+        model.put("missed_posts", postsMissed);
+        //model.put("generator", generator);
+        model.put("isModerator", boardsCache.getActiveModerSessions().get(modSessionID) != null);
         model.put("catalog", board.getThreads());
 		return new JstlView("/WEB-INF/board_page.jsp");
 	}
     
 	@GetMapping(value = "{board}/{thread}")
-	public View vt(Map<String, Object> model, @PathVariable("board") String board_id, @PathVariable("thread") String num, HttpServletRequest request) {
-        Board board = boards_cache.getBoard(board_id);
+	public View displayThread(Map<String, Object> model,
+                              @PathVariable("board") String boardId,
+                              @PathVariable("thread") String num,
+                              @CookieValue(defaultValue = "") String modSessionID,
+                              HttpServletRequest request) {
+        Board board = boardsCache.getBoard(boardId);
         trich.Thread thread = board.getThread(num);
         if(thread == null)
             return new InternalResourceView("/thread_404.html");
-        model.put("board_id", board_id);
+        model.put("board_id", boardId);
         model.put("thread", thread);
-        model.put("generator", generator);
-        model.put("isModerator", boards_cache.checkModerator(request) != null);
-        model.put("ban_reasons", board.ban_reasons);
+        // model.put("generator", generator);
+        model.put("isModerator", boardsCache.getActiveModerSessions().get(modSessionID) != null);
+        model.put("ban_reasons", board.getBanReasons());
 		return new JstlView("/WEB-INF/thread_page.jsp");
 	}
+    
+    @RequestMapping(value = "mod_panel", method = RequestMethod.GET) // доступ к мод-панели
+    public View accessModPanel(@CookieValue("mod_session_id") String modSessionID,
+                               @RequestParam String task,
+                               @RequestParam(required = false) String id,
+                               @RequestParam(required = false) String page,
+                               HttpServletResponse response,
+                               Map<String, Object> model){
+        Mod moderator = boardsCache.checkModerator(modSessionID, 1);
+        if(moderator == null)
+            return new InternalResourceView("/insufficient_previleges.html");
+        switch(task){
+            case "admin_panel":
+                if(moderator.getAccessLevel() < 4)
+                    return new RedirectView("/takaba/mod_panel");
+                return new JstlView("/WEB-INF/admin_panel.html");
+            case "view_reports":
+                ArrayList<Report> reports = new ArrayList<>();
+                java.util.List<Board> boards = moderator.getBoards();
+                for(int a = 0; a < boards.size(); a++){
+                    Board board = boards.get(a);
+                    if(board == null)
+                        continue;
+                    reports.addAll(board.getReports());
+                }
+                model.put("reports", reports);
+                model.put("cache", boardsCache);
+                return new JstlView("/WEB-INF/view_reports.jsp");
+            case "view_bans":
+                ArrayList<Ban> bansToDisplay = new ArrayList<>();
+                if(id != null){
+                    Ban ban = boardsCache.getBan(id);
+                    if(ban != null)
+                        bansToDisplay.add(ban);
+                    model.put("bans", bansToDisplay);
+                    model.put("cache", boardsCache);
+                    return new JstlView("/WEB-INF/view_bans.jsp");
+                }
+                int pageNumber;
+                try{
+                    pageNumber = Integer.parseInt(page);
+                    if(pageNumber < 1)
+                        pageNumber = 1;
+                }catch(Exception e){
+                    pageNumber = 1;
+                }
+                java.util.List<Ban> bansCatalog = boardsCache.getBansCatalog();
+                for(int a = (pageNumber-1)*10; a < pageNumber*10 && a < bansCatalog.size(); a++){
+                    bansToDisplay.add(bansCatalog.get(a));
+                }
+                model.put("bans", bansToDisplay);
+                model.put("cache", boardsCache);
+                return new JstlView("/WEB-INF/view_bans.jsp");
+            case "logout":
+                boardsCache.removeModerSession(modSessionID);
+                Cookie modCookie = new Cookie("mod_session_id", "");
+                modCookie.setMaxAge(0);
+                response.addCookie(modCookie);
+                return new RedirectView("/");
+            default:
+                return new JstlView("/res/mod_panel.jsp");
+        }
+    }
+    
+    @RequestMapping(value = "board_management", method = RequestMethod.GET) // страница управления досками
+    public View boardManagement(@CookieValue("mod_session_id") String modSessionID,
+                                HashMap<String, Object> model){
+        if(boardsCache.checkModerator(modSessionID, 4) == null)
+            return new JstlView("/thread_404.html");
+        model.put("boards", boardsCache.getBoards());
+        return new JstlView("/WEB-INF/boards_management.jsp");
+    }
     
 }

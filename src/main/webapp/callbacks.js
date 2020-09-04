@@ -705,7 +705,6 @@ function processPostformSubmitButtons(){
             }
             busy = true;
             d = new XMLHttpRequest();
-            this.postFormText.value = this.postFormText.value.replace(/</g, '&lt;');
             var form_data = new FormData(this.postForm);
             $(this.postFormText).val('');
             form_data.append("board", window.board);
@@ -714,17 +713,17 @@ function processPostformSubmitButtons(){
             d.open('POST', '/takaba/posting');
             d.send(form_data);
             d.onreadystatechange = function(){
-                if(this.readyState == 4){
-                    var resp = JSON.parse(this.responseText);
-                    if(resp.Status != 0){
-                        e = document.getElementsByClassName('postform_input');
-                        for(var a = 0; a < e.length; a++){
-                            e[a].value = '';
-                        }
+                if(this.readyState != 4)
+                    return;
+                var resp = JSON.parse(this.responseText);
+                if(resp.Status != 0){
+                    e = document.getElementsByClassName('postform_input');
+                    for(var a = 0; a < e.length; a++){
+                        e[a].value = '';
                     }
-                    showAlert((resp.Status == 1 ? "Ошибка постинга: " : "") + resp.Message);
-                    busy = false;
                 }
+                showAlert((resp.Status == 1 ? "Ошибка постинга: " : "") + resp.Message);
+                busy = false;
             }
 
         });

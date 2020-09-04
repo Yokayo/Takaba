@@ -2,16 +2,37 @@ package trich;
 
 import java.util.*;
 import java.util.concurrent.*;
+import javax.persistence.*;
+import trich.TrichDict;
 
+@Entity
+@Table(name = "bans")
 public class Ban{
     
+    @Column(name = "expires")
     private long expires;
+    
+    @Column(name = "reason")
     private String reason;
+    
+    @Column(name = "board")
     private String board;
-    private boolean isPermanent, isGlobal;
+    
+    @Column(name = "permanent")
+    private boolean isPermanent;
+    
+    @Column(name = "global")
+    private boolean isGlobal;
+    
+    @Column(name = "IP")
     private String IP;
+    
     private String humanReadableExpirationDate = "";
-    private ScheduledFuture expiration;
+    
+    @Transient private ScheduledFuture expiration;
+    
+    @Id
+    @Column(name = "id")
     private long ID;
     
     public Ban(long expires_, String ip, String reason_, String board_, boolean isPermanent_, boolean isGlobal_, long id){
@@ -22,79 +43,35 @@ public class Ban{
         isPermanent = isPermanent_;
         isGlobal = isGlobal_;
         ID = id;
-        Date exp = new Date(expires);
-        String dow = new String();
-            switch(exp.getDay()){
-                case 1:
-                    dow = "Пнд";
-                    break;
-                case 2:
-                    dow = "Втр";
-                    break;
-                case 3:
-                    dow = "Срд";
-                    break;
-                case 4:
-                    dow = "Чтв";
-                    break;
-                case 5:
-                    dow = "Птн";
-                    break;
-                case 6:
-                    dow = "Суб";
-                    break;
-                case 0:
-                    dow = "Вск";
-                    break;
-            }
-            String month = "";
-            switch(exp.getMonth()){
-                case 0:
-                    month = "Янв";
-                    break;
-                case 1:
-                    month = "Фев";
-                    break;
-                case 2:
-                    month = "Мар";
-                    break;
-                case 3:
-                    month = "Апр";
-                    break;
-                case 4:
-                    month = "Май";
-                    break;
-                case 5:
-                    month = "Июн";
-                    break;
-                case 6:
-                    month = "Июл";
-                    break;
-                case 7:
-                    month = "Авг";
-                    break;
-                case 8:
-                    month = "Сен";
-                    break;
-                case 9:
-                    month = "Окт";
-                    break;
-                case 10:
-                    month = "Ноя";
-                    break;
-                case 11:
-                    month = "Дек";
-                    break;
-            }
-            this.humanReadableExpirationDate += dow + " " + exp.getDate() + " " + month + " " + (exp.getYear() + 1900) + " " + exp.getHours() + ":" + (exp.getMinutes() < 10 ? "0" + exp.getMinutes() : exp.getMinutes());
+        this.updateHumanReadableExpirationDate();
     }
     
     public long getExpirationDate(){
         return expires;
     }
     
+    public void setExpirationDate(long expires_){
+        expires = expires_;
+        this.updateHumanReadableExpirationDate();
+    }
+    
     public String getHumanReadableExpirationDate(){
         return humanReadableExpirationDate;
+    }
+    
+    public void updateHumanReadableExpirationDate(){
+        Date exp = new Date(expires);
+        humanReadableExpirationDate = TrichDict.weekDays.get(exp.getDay())
+                                    + " "
+                                    + exp.getDate()
+                                    + " "
+                                    + TrichDict.months.get(exp.getMonth())
+                                    + " "
+                                    + (exp.getYear() + 1900)
+                                    + " "
+                                    + exp.getHours()
+                                    + ":"
+                                    + (exp.getMinutes() < 10 ? "0" + exp.getMinutes() : exp.getMinutes());
     }
     
     public String getReason(){
@@ -115,18 +92,6 @@ public class Ban{
     
     public boolean isPermanent(){
         return isPermanent;
-    }
-    
-    public ScheduledFuture getExpiration(){
-        return expiration;
-    }
-    
-    public void setExpiration(ScheduledFuture exp){
-        expiration = exp;
-    }
-    
-    public void setID(long id){
-        ID = id;
     }
     
     public long getID(){

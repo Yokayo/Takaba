@@ -2,24 +2,53 @@ package trich;
 
 import java.util.*;
 import rootContextBeans.*;
+import javax.persistence.*;
 
+@Entity
+@Table(name = "boards")
 public class Board{
-    public String id, title, desc, defaultName;
-    private long totalPosts = 0L;
-    private ArrayList<trich.Thread> threads = new ArrayList<>();
-    private ArrayList<Report> reports = new ArrayList<>();
-    public boolean needsCatalogFlushing, needsSettingsFlushing = false;
-    public ArrayList<String> banReasons = new ArrayList<>();
-    private BoardsCache boardsCache;
-    public int maxFileSize = 2;
-    public boolean delayedFlushingEnabled = false;
+    
+    @Id
+    private String id;
+    
+    @Column(name = "name")
+    private String title;
+    
+    @Column(name = "description")
+    private String desc;
+    
+    @Column(name = "`defaultName`")
+    private String defaultName;
+    
+    @ManyToMany(mappedBy = "boards")
+    private List<Mod> moders;
+    
+    @Transient private long totalPosts = 0L;
+    
+    @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "board")
+    @OrderBy("num ASC")
+    private List<trich.Thread> threads;
+    
+    @Transient private ArrayList<Report> reports;
+    
+    @ElementCollection(fetch = FetchType.LAZY, targetClass = String.class)
+    @CollectionTable(
+        name = "`banReasons`",
+        joinColumns = @JoinColumn(name = "boardID")
+    )
+    private List<String> banReasons;
+    
+    @Column(name = "`maxFileSize`")
+    private int maxFileSize;
+    
+    public Board(){}
     
     public Board(String id_, String title_, String desc_, String defaultName_, String mfs, BoardsCache bc){//, String[] catalog_cache_){
         title = title_;
         desc = desc_;
         defaultName = defaultName_;
         id = id_;
-        boardsCache = bc;
         maxFileSize = Integer.parseInt(mfs);
     }
     
@@ -41,6 +70,12 @@ public class Board{
         }
     }
     
+    public void removeThread(trich.Thread thread){
+        if(!threads.contains(thread))
+            return;
+        threads.remove(thread);
+    }
+    
     public void bumpThread(trich.Thread thread){
         if(!threads.contains(thread))
             return;
@@ -53,7 +88,7 @@ public class Board{
         threads.set(0, thread);
     }
     
-    public void addBanReasonsSet(ArrayList<String> reasons){
+    public void addBanReasonsSet(List<String> reasons){
         banReasons.addAll(reasons);
     }
     
@@ -69,10 +104,14 @@ public class Board{
         return totalPosts;
     }
     
+    public List<String> getBanReasons(){
+        return Collections.unmodifiableList(banReasons);
+    }
+    
     public Post getPost(String num){
         Thread thread;
         Post post;
-        ArrayList<Post> posts;
+        List<Post> posts;
         for(int a = 0; a < threads.size(); a++){
             thread = threads.get(a);
             posts = thread.getPosts();
@@ -94,14 +133,6 @@ public class Board{
         return null;
     }
     
-    public void removePost(String num){
-        Post post = getPost(num);
-        if(post == null)
-            return;
-        Thread thread = getThread(post.getThread());
-        
-    }
-    
     public trich.Thread getThread(String num){
         trich.Thread thread;
         for(int a = 0; a < threads.size(); a++){
@@ -112,11 +143,13 @@ public class Board{
         return null;
     }
     
-    public ArrayList<trich.Thread> getThreads(){
-        return threads;
+    public List<trich.Thread> getThreads(){
+        return Collections.unmodifiableList(threads);
     }
     
     public ArrayList<trich.Thread> getFirstNThreads(int count){
+        if(threads.size() <= count)
+            return new ArrayList<>(threads);
         ArrayList<trich.Thread> list = new ArrayList<>();
         for(int a = 0; a < count && a < threads.size(); a++){
             list.add(threads.get(a));
@@ -135,6 +168,14 @@ public class Board{
     
     public void setTitle(String title_){
         title = title_;
+    }
+    
+    public void setId(String id_){
+        id = id_;
+    }
+    
+    public void setMaxFileSize(int mfs){
+        maxFileSize = mfs;
     }
     
     public void setDesc(String desc_){
@@ -161,8 +202,12 @@ public class Board{
         return defaultName;
     }
     
-    public ArrayList<Report> getReports(){
-        return reports;
+    public int getMaxFileSize(){
+        return maxFileSize;
+    }
+    
+    public List<Report> getReports(){
+        return Collections.unmodifiableList(reports);
     }
     
 }

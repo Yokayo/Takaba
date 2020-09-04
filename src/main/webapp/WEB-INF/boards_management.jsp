@@ -93,7 +93,7 @@
             </div>
         <div class="edit_board_form_container">
             <input class="edit_board_input" id="max_file_size" name="mfs" placeholder="макс. размер файла"></input>
-            <div class="edit_board_input"><label for="delayed_flushing_cb">Delayed Flushing</label><input type="checkbox" name="delayed_flushing" id="delayed_flushing_cb"></input></div>
+            <!--<div class="edit_board_input"><label for="delayed_flushing_cb">Delayed Flushing</label><input type="checkbox" name="delayed_flushing" id="delayed_flushing_cb"></input></div>-->
             </div>
             <div style="text-align: center"><div class="submit_button">Сохранить</div></div>
         </form></div></div>
@@ -109,7 +109,7 @@
         <div class="centered_wrapper title_wrapper">Управление досками</div>
         <div class="boards_list_container">
         <div class="boards_list_item add_board_item" id="+">+</div>
-        <c:forEach items="${boards}" var="board"><div class="boards_list_item" id="${board.getID()}">${board.getTitle()}</div></c:forEach>
+        <c:forEach items="${boards}" var="board"><div class="boards_list_item" id="${board.ID}">${board.title}</div></c:forEach>
         </div>
     </body>
 </html>
