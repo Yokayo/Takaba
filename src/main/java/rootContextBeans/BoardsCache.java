@@ -45,6 +45,7 @@ public class BoardsCache{ // центральная часть борды - in-m
     private long reportsCounter = 0; // счётчик жалоб для присвоения ID
     private long bansCounter = 0; // счётчик банов для ID
     SessionFactory sessionFactory;
+    Session session;
     
     
     @PostConstruct
@@ -54,22 +55,21 @@ public class BoardsCache{ // центральная часть борды - in-m
         allowedFileExtensions.add("png");
         sessionFactory = new Configuration().configure().buildSessionFactory();
         try{
-            Session session = sessionFactory.openSession();
+            session = sessionFactory.openSession();
             org.hibernate.query.Query query = session.createQuery("FROM Board");
             List<Board> boards = query.list();
             for(int a = 0; a < boards.size(); a++){
                 Board board = boards.get(a);
-                session.update(board);
+                session.merge(board);
                 boardsList.put(board.getID(), board);
             }
             query = session.createQuery("FROM Mod");
             List<Mod> mods = query.getResultList();
             for(int a = 0; a < mods.size(); a++){
                 Mod moder = mods.get(a);
-                session.update(moder);
+                session.merge(moder);
                 modsList.put(moder.getID(), moder);
             }
-            session.close();
         }catch(HibernateException e){}
     }
     
@@ -258,42 +258,52 @@ public class BoardsCache{ // центральная часть борды - in-m
     }
     
     public void persistObject(Object object){
+        Transaction transaction = null;
         try{
-            Session session = sessionFactory.openSession();
             session.persist(object);
-            Transaction transaction = session.getTransaction();
+            transaction = session.getTransaction();
             transaction.begin();
             session.flush();
             transaction.commit();
-        }catch(HibernateException e){} // сервер всё равно сам заносит всё в логи
+        }catch(HibernateException e){
+            if(transaction != null && transaction.isActive())
+                transaction.rollback();
+        } // сервер всё равно сам заносит всё в логи
     }
     
     public void mergeObject(Object object){
+        Transaction transaction = null;
         try{
-            Session session = sessionFactory.openSession();
             session.merge(object);
-            Transaction transaction = session.getTransaction();
+            transaction = session.getTransaction();
             transaction.begin();
             session.flush();
             transaction.commit();
-        }catch(HibernateException e){}
+        }catch(HibernateException e){
+            if(transaction != null && transaction.isActive())
+                transaction.rollback();
+        }
     }
     
     public void removeObject(Object object){
+        Transaction transaction = null;
         try{
-            Session session = sessionFactory.openSession();
             session.delete(object);
-            Transaction transaction = session.getTransaction();
+            transaction = session.getTransaction();
             transaction.begin();
             session.flush();
             transaction.commit();
-        }catch(HibernateException e){}
+        }catch(HibernateException e){
+            if(transaction != null && transaction.isActive())
+                transaction.rollback();
+        }
     }
     
     @PreDestroy
     public void finalizer(){
         threadPool.shutdown();
         banTasks.shutdown();
+        session.close();
     }
     
     public void printError(String errorText){

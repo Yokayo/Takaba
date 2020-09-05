@@ -26,7 +26,7 @@ public class Board{
     @Column(name = "postcount")
     private long totalPosts;
     
-    @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.REMOVE)
+    @OneToMany(fetch = FetchType.EAGER, orphanRemoval = true, cascade = CascadeType.ALL)
     @JoinColumn(name = "board")
     @OrderBy("num ASC")
     private List<trich.Thread> threads;
