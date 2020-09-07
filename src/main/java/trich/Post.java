@@ -48,7 +48,7 @@ public class Post{
     
     @Transient private boolean isOppost;
     
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.MERGE)
     @JoinTable(
         name = "`repliesMap`",
         joinColumns = @JoinColumn(name = "original_post"),
@@ -132,8 +132,7 @@ public class Post{
         return repliedBy;
     }
     
-    public void addReply(String postnum){
-        Post reply = getThread().getBoard().getPost(postnum);
+    public void addReply(Post reply){
         if(reply == null)
             return;
         repliedBy.add(reply); // TODO contains check (?)

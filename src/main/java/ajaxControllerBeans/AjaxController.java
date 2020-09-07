@@ -92,6 +92,9 @@ public class AjaxController{ // основной функциональный к
                         return buildResponse("1", "Неподдерживаемый тип файлов (" + extension + ")");
                     }
                 }
+            }else{
+                if(thread.equals("-1"))
+                    return buildResponse("1", "Для создания треда загрузите картинку");
             }
             text = utfEncode(text)
                    .replace("<", "&lt;");
@@ -105,7 +108,6 @@ public class AjaxController{ // основной функциональный к
                         finalIndex ++;
                     String linkToReplace = parts[a].substring(0, finalIndex);
                     repliesTo.add(board.getPost(linkToReplace)); // TODO no post found
-                    board.getPost(linkToReplace).addReply(String.valueOf(board.getTotalPosts()+1L));
                     parts[a] = parts[a].replaceFirst(linkToReplace, "<a class=\"post-reply-link\" data-num=\"" + linkToReplace + "\" parent-post-num=\"" + String.valueOf(board.getTotalPosts()+1L) + "\">>>" + linkToReplace + "</a>");
                     text = text.concat(parts[a]);
                 }
@@ -139,6 +141,8 @@ public class AjaxController{ // основной функциональный к
                     }
                     int width = img.getWidth();
                     int height = img.getHeight();
+                    int thumbWidth = width;
+                    int thumbHeight = height;
                     if(img.getWidth() > 250 || img.getHeight() > 250){ // генерация превью
                         boolean widthGreater = img.getWidth() > img.getHeight();
                         double ratio = (double)(img.getWidth()) / img.getHeight();
@@ -148,6 +152,8 @@ public class AjaxController{ // основной функциональный к
                         widthGreater ? (int)(250*reverseRatio) : 250,
                         BufferedImage.SCALE_DEFAULT);
                         Image tmp = img.getScaledInstance(thumb.getWidth(), thumb.getHeight(), Image.SCALE_SMOOTH);
+                        thumbWidth = thumb.getWidth();
+                        thumbHeight = thumb.getHeight();
                         Graphics2D g2d = thumb.createGraphics();
                         g2d.drawImage(tmp, 0, 0, null);
                         g2d.dispose();
@@ -158,8 +164,8 @@ public class AjaxController{ // основной функциональный к
                     try{ // сохраняем в файлы
                         File folder = new File(rootPath + "res/" + boardId + "/src/");
                         folder.mkdirs();
-                        String fullPath = rootPath + "res/" + boardId + "/src/" + filename + "." + extension;
-                        String thumbPath = rootPath + "res/" + boardId + "/thumb/" + filename + "." + extension;
+                        String fullPath = "res/" + boardId + "/src/" + filename + "." + extension;
+                        String thumbPath = "res/" + boardId + "/thumb/" + filename + "." + extension;
                         InputStream is = file.getInputStream();
                         ByteArrayOutputStream os = new ByteArrayOutputStream();
                         int res = is.read();
@@ -169,17 +175,18 @@ public class AjaxController{ // основной функциональный к
                         }
                         os.flush();
                         byte[] rawFullSizeData = os.toByteArray();
-                        FileOutputStream stream = new FileOutputStream(new File(fullPath));
+                        FileOutputStream stream = new FileOutputStream(new File(rootPath + fullPath));
                         stream.write(rawFullSizeData); // сохранение фулсайза в файл
                         stream.close();
-                        stream = new FileOutputStream(new File(thumbPath));
+                        stream = new FileOutputStream(new File(rootPath + thumbPath));
                         ImageIO.write(img, extension, stream); // сохранение превью
                         stream.close();
                         CachedImage fullImageMetadata = new CachedImage(); // 
                         fullImageMetadata.setName(filename + "." + extension);
-                        fullImageMetadata.setMetadata("(" + Math.ceil(rawFullSizeData.length/8/1024) + "Кб, " + width + "x" + height + ")");
+                        fullImageMetadata.setMetadata("(" + (int) Math.ceil(rawFullSizeData.length/8/1024) + "Кб, " + width + "x" + height + ")");
                         fullImageMetadata.setPath(fullPath);
                         fullImageMetadata.setThumbPath(thumbPath);
+                        fullImageMetadata.setThumbDimensions(thumbWidth, thumbHeight);
                         // saving image done
                         files.add(fullImageMetadata);
                     }catch(Exception e){
@@ -206,10 +213,12 @@ public class AjaxController{ // основной функциональный к
             .append((now.getSeconds() < 10 ? "0" : "") + now.getSeconds())
             .toString();
             trich.Thread cachedThread = board.getThread(thread);
+            System.out.println("repliesTo has " + repliesTo.size() + " elements");
             Post post = new Post(Long.toString(board.getTotalPosts()+1L),
                                  cachedThread, name, tripcode, date, subject,
                                  text, files, false, request.getRemoteAddr(), repliesTo,
                                  new ArrayList<>()); // обновление кэша
+            repliesTo.stream().forEach((Post repliedPost) -> {repliedPost.addReply(post);});
             boardsCache.addPost(board, post);
             return buildResponse("0", "Сообщение отправлено");
     }
@@ -461,7 +470,7 @@ public class AjaxController{ // основной функциональный к
     @RequestMapping(value = "login", method = RequestMethod.POST)
     public View login(@RequestParam(required = false) String key, HttpServletResponse response){ // вход в систему для модераторов
         if(key == null){
-            return new RedirectView("/moder_login_form.html");
+            return new RedirectView("/mod_login_form.html");
         }
         if(boardsCache.getModerator(key) == null)
             return new RedirectView("/moder_login_form.html"); // TODO wrong ID
@@ -472,9 +481,9 @@ public class AjaxController{ // основной функциональный к
         cookie.setMaxAge(3600);
         cookie.setPath("/");
         response.addCookie(cookie);
-        boardsCache.getActiveModerSessions().put(sessionId, boardsCache.getModerator(key));
+        boardsCache.addModerSession(sessionId, boardsCache.getModerator(key));
         String sessionLambda = new String(sessionId);
-        boardsCache.scheduleTask(() -> {boardsCache.getActiveModerSessions().remove(sessionLambda);}, 3600, java.util.concurrent.TimeUnit.SECONDS);
+        boardsCache.scheduleTask(() -> {boardsCache.removeModerSession(sessionLambda);}, 3600, java.util.concurrent.TimeUnit.SECONDS);
         return new RedirectView("/takaba/mod_panel");
     }
     

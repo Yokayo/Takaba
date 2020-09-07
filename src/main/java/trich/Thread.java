@@ -44,6 +44,8 @@ public class Thread{
     
     @Id
     @Column(name = "`globalID`")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "`threads_global_IDs_generator`")
+    @SequenceGenerator(name = "`threads_global_IDs_generator`", sequenceName = "`threads_globalID_seq`", allocationSize = 1)
     private long id;
     
     public Thread(){postcount = 0;}
@@ -124,6 +126,7 @@ public class Thread{
             Post post = posts.get(a);
             builder.add(buildPostIgnoreEncoding(post.getPostnum(),
             num,
+            post.getNumInThread(),
             post.getName(),
             post.getDate(),
             post.getSubject(),
@@ -137,16 +140,17 @@ public class Thread{
         json = Json.createObjectBuilder().add("posts", builder.build()).build().toString();
         builder = Json.createArrayBuilder();
         Post oppost = posts.get(0);
-        builder.add(buildPostIgnoreEncoding(oppost.getPostnum(), oppost.getPostnum(), oppost.getName(), oppost.getDate(), oppost.getSubject(), oppost.getTripcode(), oppost.getMessage(), oppost.getPics(), true, oppost.getRepliedPosts(), oppost.getReplies()));
+        builder.add(buildPostIgnoreEncoding(oppost.getPostnum(), oppost.getPostnum(), 1, oppost.getName(), oppost.getDate(), oppost.getSubject(), oppost.getTripcode(), oppost.getMessage(), oppost.getPics(), true, oppost.getRepliedPosts(), oppost.getReplies()));
             for(int a = postcount > 4 ? posts.size()-3 : 1; a < posts.size(); a++){
                 Post json_post = posts.get(a);
-                builder.add(buildPostIgnoreEncoding(json_post.getPostnum(), json_post.getThread().getNum(), json_post.getName(), json_post.getDate(), json_post.getSubject(), json_post.getTripcode(), json_post.getMessage(), json_post.getPics(), false, json_post.getRepliedPosts(), json_post.getReplies()));
+                builder.add(buildPostIgnoreEncoding(json_post.getPostnum(), json_post.getThread().getNum(), json_post.getNumInThread(), json_post.getName(), json_post.getDate(), json_post.getSubject(), json_post.getTripcode(), json_post.getMessage(), json_post.getPics(), false, json_post.getRepliedPosts(), json_post.getReplies()));
             }
         prev_json = Json.createObjectBuilder().add("posts", builder.build()).build().toString();
     }
     
     private JsonObject buildPostIgnoreEncoding(String num,
                                                String parent,
+                                               int numInThread,
                                                String name,
                                                String date,
                                                String subject,
@@ -158,7 +162,15 @@ public class Thread{
                                                List<Post> repliedBy){
         JsonArrayBuilder pics_array = Json.createArrayBuilder();
         for(int a = 0; a < pics.size(); a++)
-            pics_array.add(pics.get(a).getPath());
+            pics_array.add(Json.createObjectBuilder().add("full_path", pics.get(a).getPath())
+                                                     .add("thumb_path", pics.get(a).getThumbPath())
+                                                     .add("name", pics.get(a).getName())
+                                                     .add("meta", pics.get(a).getMetadata())
+                                                     .add("width", pics.get(a).getWidth())
+                                                     .add("height", pics.get(a).getHeight())
+                                                     .add("thumb_width", pics.get(a).getThumbWidth())
+                                                     .add("thumb_height", pics.get(a).getThumbHeight())
+                                                     .build());
         JsonArrayBuilder repliesTo_array = Json.createArrayBuilder();
         for(int a = 0; a < repliesTo.size(); a++)
             repliesTo_array.add(repliesTo.get(a).getPostnum());
@@ -174,6 +186,7 @@ public class Thread{
             .add("trip", trip)
             .add("message", message)
             .add("pics", pics_array.build())
+            .add("nit", numInThread)
             .add("oppost", String.valueOf(op))
             .add("replies_to", repliesTo_array.build())
             .add("replied_by", repliedBy_array.build())

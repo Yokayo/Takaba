@@ -136,7 +136,7 @@ public class BoardsCache{ // центральная часть борды - in-m
             return;
         trich.Thread thread = post.getThread();
         if(thread == null){
-            System.out.println("Saving post with num " + post.getPostnum() + ", its thread is null.");
+            System.out.println("Saving post with num " + post.getPostnum() + ", its thread is null."); // dbg
             thread = new trich.Thread();
             thread.setBoard(board);
             post.setThread(thread);
@@ -223,6 +223,12 @@ public class BoardsCache{ // центральная часть борды - in-m
     
     public Map<String, Mod> getActiveModerSessions(){
         return Collections.unmodifiableMap(activeModerSessions);
+    }
+    
+    public void addModerSession(String key, Mod moder){
+        if(key == null || moder == null)
+            return;
+        activeModerSessions.put(key, moder);
     }
     
     public long getBansCounter(){

@@ -18,9 +18,21 @@ public class CachedImage{
     @Column(name = "`thumbPath`")
     private String thumbPath;
     
-    @Transient private String width, height;
+    @Column(name = "width")
+    private String width;
+
+    @Column(name = "height")
+    private String height;
+    
+    @Column(name = "`thumbWidth`")
+    private String thumbWidth;
+
+    @Column(name = "`thumbHeight`")
+    private String thumbHeight;
     
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "`images_IDs_generator`")
+    @SequenceGenerator(name = "`images_IDs_generator`", sequenceName = "images_id_seq", allocationSize = 1)
     private long id;
 
     public CachedImage(){
@@ -42,7 +54,12 @@ public class CachedImage{
         metadata = metadata_;
         String dimensions = metadata.split(" ")[1];
         width = dimensions.split("x")[0];
-        height = dimensions.split("x")[1];
+        height = dimensions.split("x")[1].replaceFirst("\\)", "");
+    }
+    
+    public void setThumbDimensions(int w, int h){
+        thumbWidth = String.valueOf(w);
+        thumbHeight = String.valueOf(h);
     }
     
     public String getWidth(){
@@ -51,6 +68,14 @@ public class CachedImage{
     
     public String getHeight(){
         return height;
+    }
+    
+    public String getThumbWidth(){
+        return thumbWidth;
+    }
+    
+    public String getThumbHeight(){
+        return thumbHeight;
     }
     
     public String getPath(){
