@@ -11,5 +11,5 @@
             <input class="qr_postform_input qr_options_field" id="options" name="options" placeholder="опции"></input>
         </div>
         <textarea class="qr_form_message" name="contents" rows="10" placeholder="Комментарий"></textarea>
-        <input type="file" name="pic" class="qr_files" multiple="true"></input></form>
+        <input class="postform_input" type="file" name="pic" class="qr_files" multiple="true"></input></form>
 </div>

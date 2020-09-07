@@ -24,33 +24,34 @@
             <div class="thread-${thread.getPost(0).postnum}">
                 <c:forEach items="${thread.posts}" var="post">
                     <div class="thread_post thread_post_${post.numInThread}" id="${post.postnum}">
-                        <div class="post_${post.numInThread == 1 ? "oppost" : "reply"}">
-                            <div class="post_details">
-                                <input type="checkbox" name="delete" class="turnmeoff" value="${post.postnum}">
-                                <span class="post_name">${post.name}</span>
-                                <c:if test="${!post.subject.equals('')}"><span class="post_subject">${post.subject}</span></c:if>
-                                <c:if test="${!post.tripcode.equals('')}"><span class="post_trip">!${post.subject}</span></c:if>
-                                <span class="post_date">${post.date}</span>
-                                <a class="post_reflink" href="${post.thread.num}#${post.postnum}">№</a><span class="postnum" data-num="${post.postnum}">${post.postnum}</span>
-                                <span class="post_buttons_container"><a class="postbtn_hide" data-num="${post.postnum}"></a><a class="postbtn_report" data-num="${post.postnum}"></a><a class="postbtn_options" data-num="${post.postnum}"></a></span>
-                                <c:if test="${post.numInThread == 1}"><span class="oppost_reply_link">[<a href="${post.postnum}">Ответ</a>]</span></c:if>
-                            </div>
+                        <div class=
+                                <c:if test="${post.numInThread == 1}">"post_oppost"</c:if>
+                                <c:if test="${post.numInThread > 1}">"post_reply"</c:if>
+                        >
+                        <div class="post_details">
+                            <input type="checkbox" name="delete" class="turnmeoff" value="${post.postnum}">
+                            <span class="post_name">${post.name}</span>
+                            <c:if test="${!post.subject.equals('')}"><span class="post_subject">${post.subject}</span></c:if>
+                            <c:if test="${!post.tripcode.equals('')}"><span class="post_trip">!${post.subject}</span></c:if>
+                            <span class="post_date">${post.date}</span>
+                            <a class="post_reflink" href="${post.thread.num}#${post.postnum}">№</a><span class="postnum" data-num="${post.postnum}">${post.postnum}</span>
+                            <span class="post_number">${post.numInThread}</span>
+                            <span class="post_buttons_container"><a class="postbtn_hide" data-num="${post.postnum}"></a><a class="postbtn_report" data-num="${post.postnum}"></a><a class="postbtn_options" data-num="${post.postnum}"></a></span>
+                            <c:if test="${post.numInThread == 1}"><span class="oppost_reply_link">[<a href="${post.postnum}">Ответ</a>]</span></c:if>
+                        </div>
                         <c:if test="${post.pics.size() > 0}">
                             <c:if test="${post.pics.size() > 1}"><div class="multiple_files_container"></c:if>
                             <c:forEach items="${post.pics}" var="pic">
                                 <c:if test="${post.pics.size() > 1}"><div class="multiple_files_single"></c:if>
-                                <div class="file_attr ${post.pics.size() > 1 ? "multiple_file_attr" : "single_file_attr"}"><a href="${pic.path}" class="file_link">${pic.name}</a></div>
+                                <div class="file_attr ${post.pics.size() > 1 ? "multiple_file_attr" : "single_file_attr"}"><a href="/${pic.path}" class="file_link">${pic.name}</a></div>
                                 <div class="file_attachment_sign${post.pics.size() > 1 ? "" : " single_file_attachment_sign"}">${pic.metadata}</div>
-                                <a href="${pic.path}" class="${post.pics.size() > 1 ? "file_attachment_multiple" : "file_attachment_single"}"><img src="${pic.thumbPath}" data-src="${pic.path}" src-width="${pic.width}" src-height="${pic.height}" class="attachment"></img></a>
+                                <a href="/${pic.path}" class="${post.pics.size() > 1 ? "file_attachment_multiple" : "file_attachment_single"}"><img src="/${pic.thumbPath}" data-src="/${pic.path}" src-width="${pic.width}" src-height="${pic.height}" thumb-width="${pic.thumbWidth}" thumb-height="${pic.thumbHeight}" class="attachment"></img></a>
                                 <c:if test="${post.pics.size() > 1}"></div></c:if>
                             </c:forEach>
-                            </div></br>
                         </c:if>
                         <article class="post_message">${post.message}</article>
-                        <span class="reply_map reply_map_${post.postnum}"${post.replies.size() > 0 ? "" : " style=\"display: none\""} data-num="${post.postnum}">Ответы:
-                        <c:forEach items="${post.replies}" var="reply" varStatus="replyNumber">
-                            ${replyNumber.index == 0 ? "" : ", "}<a class="reply_map_entry" data-num="${reply.postnum}">>>${reply.postnum}</a>
-                        </c:forEach>
+                        <span class="reply_map reply_map_${post.postnum}"${post.replies.size() > 0 ? "" : " style=\"display: none\""} data-num="${post.postnum}">Ответы: 
+                        <c:forEach items="${post.replies}" var="reply" varStatus="replyNumber">${replyNumber.index == 0 ? "" : ", "}<a class="reply_map_entry" data-num="${reply.postnum}">>>${reply.postnum}</a></c:forEach>
                         </span></div>
                 </div>
                 </c:forEach>

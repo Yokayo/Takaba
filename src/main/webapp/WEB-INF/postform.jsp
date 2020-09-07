@@ -13,5 +13,5 @@
             <input class="postform_input" id="options" name="options" placeholder="опции"></input>
         </div>
         <textarea class="postform_text postform_input" name="contents" class="submit_form_text" rows="10" placeholder="Комментарий"></textarea>
-        <input type="file" name="pic" multiple="true"></input></form>
+        <input class="postform_input" type="file" name="pic" multiple="true"></input></form>
 </div>
